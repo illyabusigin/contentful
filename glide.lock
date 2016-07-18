@@ -1,0 +1,14 @@
+hash: c8de1e905905f9b8527567d52f8bed9fd52be4c4421722f3e1714cff783b9b67
+updated: 2016-07-18T09:54:20.965626725-05:00
+imports:
+- name: github.com/beefsack/go-rate
+  version: de575b104f4218f4aebdc95ba56f61f38d0dad86
+- name: github.com/dghubble/sling
+  version: 3db1177a9ec00dae4266e45abb504e2e13d7dc04
+- name: github.com/google/go-querystring
+  version: 9235644dd9e52eeae6fa48efd539fdc351a0af53
+  subpackages:
+  - query
+- name: github.com/stretchr/testify
+  version: d77da356e56a7428ad25149ca77381849a6a5232
+devImports: []

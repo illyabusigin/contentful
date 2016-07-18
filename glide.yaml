@@ -1,0 +1,8 @@
+package: github.com/illyabusigin/contentful
+import:
+- package: github.com/dghubble/sling
+- package: github.com/beefsack/go-rate
+- package: github.com/google/go-querystring
+  subpackages:
+  - query
+- package: github.com/stretchr/testify
