@@ -8,14 +8,22 @@ import (
 // Locale allow the definition of translated content for both assets and
 // entries. A locale consists mainly of a name and a locale code.
 type Locale struct {
-	System
-	Name     string
-	Code     string
-	Default  bool
-	Optional bool
-	Fallback string
+	System   `json:"-"`
+	Name     string `json:"name"`
+	Code     string `json:"code"`
+	Default  bool   `json:"default"`
+	Optional bool   `json:"optional"`
+	Fallback string `json:"fallbackCode"`
 
-	SpaceID string
+	SpaceID string `json:"-"`
+}
+
+func (l *Locale) Validate() error {
+	if l.SpaceID == "" {
+		return fmt.Errorf("Locale must specify valid SpaceID")
+	}
+
+	return nil
 }
 
 type contentfulLocale struct {
@@ -121,13 +129,17 @@ func (c *Client) GetAllLocales(spaceIdentifier string) (response AllLocalesRespo
 
 // CreateLocale will create a locale with the provided information. It's important
 // to note that you cannot create two lcoales with the same locale code.
-func (c *Client) CreateLocale(name string, code string, optional bool, spaceIdentifier string) (locale *Locale, err error) {
+func (c *Client) CreateLocale(locale *Locale) (created *Locale, err error) {
+	if err = locale.Validate(); err != nil {
+		return
+	}
+
 	c.rl.Wait()
 
 	localeData := new(contentfulLocale)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/locales", spaceIdentifier)
-	_, err = c.sling.New().Post(path).Receive(localeData, contentfulError)
+	path := fmt.Sprintf("spaces/%v/locales", locale.SpaceID)
+	_, err = c.sling.New().Post(path).BodyJSON(locale).Receive(localeData, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
@@ -135,7 +147,7 @@ func (c *Client) CreateLocale(name string, code string, optional bool, spaceIden
 	}
 
 	if err == nil {
-		locale = localeData.Convert()
+		created = localeData.Convert()
 	}
 
 	return

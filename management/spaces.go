@@ -13,6 +13,14 @@ type Space struct {
 	Name   string `json:"name"`
 }
 
+func (s *Space) Validate() error {
+	if s.Name == "" {
+		return fmt.Errorf("Space must specify a valid name")
+	}
+
+	return nil
+}
+
 type contentfulSpace struct {
 	Name string `json:"name"`
 	Sys  struct {
@@ -97,13 +105,17 @@ func (c *Client) GetAllSpaces() (response AllSpacesResponse) {
 
 // CreateSpace will create a space with the provided name. It's important to
 // note that names are not unique between spaces.
-func (c *Client) CreateSpace(name string) (space *Space, err error) {
+func (c *Client) CreateSpace(space *Space) (created *Space, err error) {
+	if err = space.Validate(); err != nil {
+		return
+	}
+
 	c.rl.Wait()
 
 	spaceData := new(contentfulSpace)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces")
-	_, err = c.sling.New().Post(path).Receive(spaceData, contentfulError)
+	_, err = c.sling.New().Post(path).BodyJSON(space).Receive(spaceData, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
@@ -111,7 +123,7 @@ func (c *Client) CreateSpace(name string) (space *Space, err error) {
 	}
 
 	if err == nil {
-		space = spaceData.Convert()
+		created = spaceData.Convert()
 	}
 
 	return
