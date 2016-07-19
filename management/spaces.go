@@ -54,7 +54,7 @@ func (c *contentfulSpace) Convert() *Space {
 }
 
 type AllSpacesResponse struct {
-	Spaces []Space
+	Spaces []*Space
 	Error  error
 }
 
@@ -85,7 +85,7 @@ func (c *Client) GetAllSpaces() (response AllSpacesResponse) {
 	if err != nil {
 		response.Error = err
 	} else {
-		response.Spaces = make([]Space, 0)
+		response.Spaces = make([]*Space, 0)
 
 		for _, space := range spacesData.Items {
 			response.Spaces = append(response.Spaces, space.Convert())
