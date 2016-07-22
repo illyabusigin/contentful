@@ -57,6 +57,12 @@ type System struct {
 	Version int
 }
 
+type Pagination struct {
+	Total int
+	Skip  int
+	Limit int
+}
+
 type ContentfulError struct {
 	RequestID string `json:"requestId"`
 	Message   string `json:"message"`
