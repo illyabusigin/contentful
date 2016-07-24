@@ -55,6 +55,10 @@ type System struct {
 
 	Type    string
 	Version int
+
+	Space *struct {
+		*Link `json:"sys"`
+	} `json:"space, omitempty"`
 }
 
 type Pagination struct {
