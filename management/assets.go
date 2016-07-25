@@ -2,7 +2,6 @@ package management
 
 import (
 	"fmt"
-	"time"
 )
 
 // Asset represents a file within a space. An asset can be any kind of file: an
@@ -13,18 +12,38 @@ import (
 // locale. Those assets which are not localized simply provide a single file
 // under the default locale.
 type Asset struct {
-	System
-	Fields struct {
-		Title  map[string]string   `json:"title"`
-		File   map[string]FileData `json:"file"`
-		Detail AssetDetail         `json:"details"`
-	} `json:"fields"`
+	System `json:"sys"`
+	Fields AssetFields `json:"fields"`
 
-	Processed bool
-	Published bool
+	Processed bool `json:"-"`
+	Published bool `json:"-"`
 }
 
+// AssetFields contains all asset information.
+type AssetFields struct {
+	Title  map[string]string    `json:"title"`
+	File   map[string]AssetData `json:"file"`
+	Detail *AssetDetail         `json:"details,omitempty"`
+}
+
+// AssetData contains all asset information
+type AssetData struct {
+	MIMEType string  `json:"contentType"`
+	Name     string  `json:"fileName"`
+	URL      *string `json:"url,omitempty"`
+	Upload   *string `json:"upload,omitempty"`
+}
+
+// Validate will validate the Asset to ensure all necessary fields are present.
 func (a *Asset) Validate() error {
+	if a.System.Space == nil {
+		return fmt.Errorf("Asset validation failed. System.Space.ID cannot be empty!")
+	}
+
+	if a.System.ID == "" {
+		return fmt.Errorf("Asset validation failed. System.ID cannot be empty!")
+	}
+
 	return nil
 }
 
@@ -42,14 +61,12 @@ type AssetDetail struct {
 type File struct {
 	SpaceID string `json:"-"`
 
-	Fields struct {
-		Title map[string]string   `json:"title"`
-		File  map[string]FileData `json:"file"`
-	} `json:"fields"`
+	Fields FileFields `json:"fields"`
 }
 
-func (f *File) Validate() error {
-	return nil
+type FileFields struct {
+	Title map[string]string   `json:"title"`
+	File  map[string]FileData `json:"file"`
 }
 
 // FileData contains all file information
@@ -57,6 +74,32 @@ type FileData struct {
 	MIMEType string  `json:"contentType"`
 	Name     string  `json:"fileName"`
 	URL      *string `json:"upload"`
+}
+
+func (f *File) Validate() error {
+	if f.SpaceID == "" {
+		return fmt.Errorf("Filed validation failed. SpaceID cannot be empty!")
+	}
+
+	if f.Fields.File == nil || len(f.Fields.File) == 0 {
+		return fmt.Errorf("Filed validation failed. Fields.File cannot be empty!")
+	}
+
+	if f.Fields.File == nil || len(f.Fields.Title) == 0 {
+		return fmt.Errorf("Filed validation failed. Fields.Title cannot be empty!")
+	}
+
+	for _, data := range f.Fields.File {
+		if data.Name == "" {
+			return fmt.Errorf("Filed validation failed. FileData.Name cannot be empty. FileData: %v", data)
+		} else if data.MIMEType == "" {
+			return fmt.Errorf("Filed validation failed. FileData.MIMEType cannot be empty. FileData: %v", data)
+		} else if *data.URL == "" || data.URL == nil {
+			return fmt.Errorf("Filed validation failed. FileData.URL cannot be empty. FileData: %v", data)
+		}
+	}
+
+	return nil
 }
 
 // CreateAsset creates a new asset. It's important to note that the asset still
@@ -71,6 +114,7 @@ func (c *Client) CreateAsset(file *File) (created *Asset, err error) {
 	}
 
 	c.rl.Wait()
+	created = &Asset{}
 
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets", file.SpaceID)
@@ -165,20 +209,27 @@ func (c *Client) FetchAssets(spaceID string, published bool, limit int, offset i
 
 		return fmt.Sprintf("spaces/%v/assets", spaceID)
 	}
+
 	req, err := c.sling.New().
 		Get(path()).
-		Receive(results, contentfulError)
+		Request()
 
 	if err != nil {
 		return
 	}
+
+	// Add query parameters
+	req.URL.Query().Set("skip", fmt.Sprintf("%v", offset))
+	req.URL.Query().Set("limit", fmt.Sprintf("%v", limit))
+
+	_, err = c.sling.Do(req, results, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
 		return
 	}
 
-	return results.Items, results.Pagination, nil
+	return results.Items, results.Pagination, err
 }
 
 // ProcessAsset process the asset. This uploads the asset to
@@ -192,7 +243,7 @@ func (c *Client) ProcessAsset(asset *Asset, localeCode string) (err error) {
 	c.rl.Wait()
 
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/assets/%v/%v/process", asset.Space.ID, asset.ID, localeCode)
+	path := fmt.Sprintf("spaces/%v/assets/%v/files/%v/process", asset.Space.ID, asset.ID, localeCode)
 	_, err = c.sling.New().
 		Put(path).
 		Receive(nil, contentfulError)
@@ -310,6 +361,8 @@ func (c *Client) UnarchiveAsset(asset *Asset) (unarchived *Asset, err error) {
 	}
 
 	c.rl.Wait()
+
+	unarchived = &Asset{}
 
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v/archived", asset.Space.ID, asset.System.ID)

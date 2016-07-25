@@ -49,16 +49,24 @@ func authorizationHeader(accessToken string) string {
 ////////////////
 
 type System struct {
-	ID        string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 
-	Type    string
-	Version int
+	Type    string `json:"type"`
+	Version int    `json:"version"`
 
-	Space *struct {
-		*Link `json:"sys"`
-	} `json:"space, omitempty"`
+	Space *SpaceField `json:"space, omitempty"`
+}
+
+type Link struct {
+	Type     string `json:"type"`
+	LinkType string `json:"linkType"`
+	ID       string `json:"id"`
+}
+
+type SpaceField struct {
+	*Link `json:"sys"`
 }
 
 type Pagination struct {
@@ -78,4 +86,11 @@ type ContentfulError struct {
 
 func (e *ContentfulError) Error() string {
 	return e.Message
+}
+
+// Doer executes http requests.  It is implemented by *http.Client.  You can
+// wrap *http.Client with layers of Doers to form a stack of client-side
+// middleware.
+type Doer interface {
+	Do(req *http.Request) (*http.Response, error)
 }

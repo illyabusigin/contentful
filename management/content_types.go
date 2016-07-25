@@ -21,7 +21,7 @@ const (
 	Date     = "Date"
 	Location = "Location"
 	Object   = "Object"
-	Link     = "Link"
+	LinkType = "Link"
 	Array    = "Array"
 )
 
@@ -114,7 +114,7 @@ func (c *Client) FetchContentTypes(spaceID string, published bool, limit int, of
 
 		return fmt.Sprintf("spaces/%v/content_types", spaceID)
 	}
-	req, err := c.sling.New().
+	_, err = c.sling.New().
 		Get(path()).
 		Receive(results, contentfulError)
 

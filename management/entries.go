@@ -4,12 +4,6 @@ import (
 	"fmt"
 )
 
-type Link struct {
-	Type     string
-	LinkType string
-	ID       string
-}
-
 // Entry represent textual content in a space. An entry's data adheres to a
 // certain content type.
 type Entry struct {
@@ -73,7 +67,8 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 	}
 
 	// Perform request
-	c.sling.Do(req, results, contentfulError)
+	resp, _ := c.sling.Do(req, results, contentfulError)
+	fmt.Println("respon 0->", resp)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
@@ -209,7 +204,7 @@ func (c *Client) PublishEntry(entry *Entry) (published *Entry, err error) {
 	path := fmt.Sprintf("spaces/%v/entries/%v/published", entry.SpaceID, entry.System.ID)
 	_, err = c.sling.New().
 		Put(path).
-		Set("X-Contentful-Version", entry.System.Version).
+		Set("X-Contentful-Version", fmt.Sprintf("%v", entry.System.Version)).
 		Receive(published, contentfulError)
 
 	if contentfulError.Message != "" {
