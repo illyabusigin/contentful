@@ -1,8 +1,12 @@
 package: github.com/illyabusigin/contentful
 import:
-- package: github.com/dghubble/sling
 - package: github.com/beefsack/go-rate
 - package: github.com/google/go-querystring
   subpackages:
   - query
 - package: github.com/stretchr/testify
+- package: gopkg.in/gavv/httpexpect.v1
+- package: github.com/ajg/form
+- package: github.com/gavv/gojsondiff
+- package: github.com/imkira/go-interpol
+- package: github.com/ingaged/sling

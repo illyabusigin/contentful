@@ -1,10 +1,12 @@
-hash: 3476558a53467a223ed3660341a50f165f9b46a1b0caf1ad0aa7b0c2e8ce66cc
-updated: 2016-07-25T09:55:41.088814349-05:00
+hash: 77d7649969a642af7b8fca49ed5c4045cd49ed0c85138b3255bff37309185915
+updated: 2016-07-25T10:03:59.968534034-05:00
 imports:
 - name: github.com/ajg/form
   version: 7ff89c75808766205bfa4411abb436c98c33eb5e
 - name: github.com/beefsack/go-rate
   version: de575b104f4218f4aebdc95ba56f61f38d0dad86
+- name: github.com/dghubble/sling
+  version: 9da07f0db0226d82803fc7374dba08506d29da00
 - name: github.com/gavv/gojsondiff
   version: 36046c6e558e7f854ebd3fd97d1e9812ebe8709b
 - name: github.com/golang/mock
@@ -17,6 +19,8 @@ imports:
   - query
 - name: github.com/imkira/go-interpol
   version: b9781c93ae51c8b4fc3af1b1426909721af0a624
+- name: github.com/ingaged/sling
+  version: c4f994f2b213e3f6f59b92bfbf15b14aed524b8d
 - name: github.com/stretchr/testify
   version: d77da356e56a7428ad25149ca77381849a6a5232
 - name: gopkg.in/gavv/httpexpect.v1
