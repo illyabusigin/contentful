@@ -2,7 +2,6 @@ package management
 
 import (
 	"bytes"
-	_ "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -32,6 +31,8 @@ var (
 	accessToken  = "access_token"
 	version      = "v1"
 	errIntercept = fmt.Errorf("Intercept error")
+	createdDate  = time.Date(2016, 07, 25, 16, 00, 00, 0, time.UTC)
+	updatedDate  = time.Date(2016, 07, 26, 16, 00, 00, 0, time.UTC)
 
 	goodURL  = "//images.contentful.com/haian05f1d28/6rDHXkKllCOwoIiKMqgUQu/ea8f4bbba7581f21a32a3e68f56850e3/med106330_1210_bacon_pancakes_horiz.jpg"
 	goodFile = File{
@@ -48,8 +49,8 @@ var (
 	goodAsset = Asset{
 		System: System{
 			ID:        "6rDHXkKllCOwoIiKMqgUQu",
-			CreatedAt: time.Date(2016, 07, 25, 16, 00, 00, 0, time.UTC),
-			UpdatedAt: time.Date(2016, 07, 25, 16, 00, 00, 0, time.UTC),
+			CreatedAt: &createdDate,
+			UpdatedAt: &updatedDate,
 
 			Version: 1,
 			Type:    "Asset",
@@ -249,7 +250,7 @@ func TestUpdateAssetRequest(t *testing.T) {
     "sys": {
         "id": "6rDHXkKllCOwoIiKMqgUQu",
         "createdAt": "2016-07-25T16:00:00Z",
-        "updatedAt": "2016-07-25T16:00:00Z",
+        "updatedAt": "2016-07-26T16:00:00Z",
         "type": "Asset",
         "version": 1,
         "space": {
@@ -275,9 +276,7 @@ func TestUpdateAssetRequest(t *testing.T) {
 }`)
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
-	fmt.Println("JSON: ", string(requestJSON))
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
-
 }
 
 func TestUpdateAssetResponseSuccess(t *testing.T) {
