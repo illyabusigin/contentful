@@ -56,7 +56,7 @@ type System struct {
 	Type    string `json:"type"`
 	Version int    `json:"version"`
 
-	Space *SpaceField `json:"space, omitempty"`
+	Space *SpaceField `json:"space,omitempty"`
 }
 
 type Link struct {
