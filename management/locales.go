@@ -2,112 +2,52 @@ package management
 
 import (
 	"fmt"
-	"time"
 )
 
 // Locale allow the definition of translated content for both assets and
 // entries. A locale consists mainly of a name and a locale code.
 type Locale struct {
-	System   `json:"-"`
+	System `json:"sys"`
+
 	Name     string `json:"name"`
 	Code     string `json:"code"`
 	Default  bool   `json:"default"`
 	Optional bool   `json:"optional"`
-	Fallback string `json:"fallbackCode"`
-
-	SpaceID string `json:"-"`
+	Fallback string `json:"fallbackCode,omitempty"`
 }
 
 func (l *Locale) Validate() error {
-	if l.SpaceID == "" {
-		return fmt.Errorf("Locale must specify valid SpaceID")
+	if len(l.Name) == 0 {
+		return fmt.Errorf("Locale name cannot be empty")
+	}
+
+	if len(l.Code) == 0 {
+		return fmt.Errorf("Locale code cannot be empty")
+	}
+
+	if l.Space == nil || l.Space.ID == "" {
+		return fmt.Errorf("Locale must specify valid System.Space.ID")
 	}
 
 	return nil
 }
 
-type contentfulLocale struct {
-	Name                 string `json:"name"`
-	InternalCode         string `json:"internal_code"`
-	Code                 string `json:"code"`
-	FallbackCode         string `json:"fallbackCode"`
-	Default              bool   `json:"default"`
-	ContentManagementAPI bool   `json:"contentManagementApi"`
-	ContentDeliveryAPI   bool   `json:"contentDeliveryApi"`
-	Optional             bool   `json:"optional"`
-	Sys                  struct {
-		Type    string `json:"type"`
-		ID      string `json:"id"`
-		Version int    `json:"version"`
-		Space   struct {
-			Sys struct {
-				Type     string `json:"type"`
-				LinkType string `json:"linkType"`
-				ID       string `json:"id"`
-			} `json:"sys"`
-		} `json:"space"`
-		CreatedBy struct {
-			Sys struct {
-				Type     string `json:"type"`
-				LinkType string `json:"linkType"`
-				ID       string `json:"id"`
-			} `json:"sys"`
-		} `json:"createdBy"`
-		CreatedAt time.Time `json:"createdAt"`
-		UpdatedBy struct {
-			Sys struct {
-				Type     string `json:"type"`
-				LinkType string `json:"linkType"`
-				ID       string `json:"id"`
-			} `json:"sys"`
-		} `json:"updatedBy"`
-		UpdatedAt time.Time `json:"updatedAt"`
-	} `json:"sys"`
-}
-
-func (c *contentfulLocale) Convert() *Locale {
-	locale := new(Locale)
-
-	locale.ID = c.Sys.ID
-	locale.CreatedAt = c.Sys.CreatedAt
-	locale.UpdatedAt = c.Sys.UpdatedAt
-
-	locale.Type = c.Sys.Type
-	locale.Version = c.Sys.Version
-
-	locale.Name = c.Name
-	locale.Code = c.Code
-	locale.Default = c.Default
-	locale.Optional = c.Optional
-	locale.Fallback = c.FallbackCode
-	locale.SpaceID = c.Sys.Space.Sys.ID
-
-	return locale
-}
-
-type AllLocalesResponse struct {
-	Locales []*Locale
-	Error   error
-}
-
-// GetAllLocales returns all locales associated with the provided space identifier
-func (c *Client) GetAllLocales(spaceIdentifier string) (response AllLocalesResponse) {
+// FetchAllLocales returns all locales associated with the provided space identifier
+func (c *Client) FetchAllLocales(spaceID string) (locales []*Locale, pagination *Pagination, err error) {
 	c.rl.Wait()
 
 	type localesResponse struct {
-		Total int `json:"total"`
-		Limit int `json:"limit"`
-		Skip  int `json:"skip"`
-		Sys   struct {
+		*Pagination
+		Sys struct {
 			Type string `json:"type"`
 		} `json:"sys"`
-		Items []contentfulLocale `json:"items"`
+		Items []*Locale `json:"items"`
 	}
 
-	localesData := new(localesResponse)
+	results := new(localesResponse)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/locales", spaceIdentifier)
-	_, err := c.sling.New().Get(path).Receive(localesData, contentfulError)
+	path := fmt.Sprintf("spaces/%v/locales", spaceID)
+	_, err = c.sling.New().Get(path).Receive(results, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
@@ -115,16 +55,10 @@ func (c *Client) GetAllLocales(spaceIdentifier string) (response AllLocalesRespo
 	}
 
 	if err != nil {
-		response.Error = err
-	} else {
-		response.Locales = make([]*Locale, 0)
-
-		for _, locale := range localesData.Items {
-			response.Locales = append(response.Locales, locale.Convert())
-		}
+		return nil, nil, err
 	}
 
-	return
+	return results.Items, results.Pagination, nil
 }
 
 // CreateLocale will create a locale with the provided information. It's important
@@ -136,39 +70,29 @@ func (c *Client) CreateLocale(locale *Locale) (created *Locale, err error) {
 
 	c.rl.Wait()
 
-	localeData := new(contentfulLocale)
+	created = new(Locale)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/locales", locale.SpaceID)
-	_, err = c.sling.New().Post(path).BodyJSON(locale).Receive(localeData, contentfulError)
+	path := fmt.Sprintf("spaces/%v/locales", locale.Space.ID)
+	_, err = c.sling.New().Post(path).BodyJSON(locale).Receive(created, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
-		return
-	}
-
-	if err == nil {
-		created = localeData.Convert()
 	}
 
 	return
 }
 
 // FetchLocale will return a locale for the given space and locale identifier.
-func (c *Client) FetchLocale(spaceIdentifier string, localeIdentifier string) (locale *Locale, err error) {
+func (c *Client) FetchLocale(spaceID string, localeID string) (locale *Locale, err error) {
 	c.rl.Wait()
 
-	localeData := new(contentfulLocale)
+	locale = new(Locale)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/locales/%v", spaceIdentifier, localeIdentifier)
-	_, err = c.sling.New().Get(path).Receive(localeData, contentfulError)
+	path := fmt.Sprintf("spaces/%v/locales/%v", spaceID, localeID)
+	_, err = c.sling.New().Get(path).Receive(locale, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
-		return
-	}
-
-	if err == nil {
-		locale = localeData.Convert()
 	}
 
 	return
@@ -180,24 +104,23 @@ func (c *Client) UpdateLocale(locale *Locale) (updated *Locale, err error) {
 		return nil, fmt.Errorf("Unable to locale. Locale argument was nil!")
 	}
 
+	if err = locale.Validate(); err != nil {
+		return
+	}
+
 	c.rl.Wait()
 
-	localeData := new(contentfulLocale)
+	updated = new(Locale)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/locales/%v", locale.SpaceID, locale.System.ID)
+	path := fmt.Sprintf("spaces/%v/locales/%v", locale.Space.ID, locale.System.ID)
 	_, err = c.sling.New().
 		Set("X-Contentful-Version", fmt.Sprintf("%v", locale.System.Version)).
 		Put(path).
 		BodyJSON(locale).
-		Receive(localeData, contentfulError)
+		Receive(updated, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
-		return
-	}
-
-	if err == nil {
-		updated = localeData.Convert()
 	}
 
 	return
@@ -207,16 +130,15 @@ func (c *Client) UpdateLocale(locale *Locale) (updated *Locale, err error) {
 // is not possible to recover from this action! Every content that
 // was stored for that specific locale gets deleted and cannot be
 // recreated by creating the same locale again.
-func (c *Client) DeleteLocale(spaceIdentifier string, localIdentifier string) (err error) {
+func (c *Client) DeleteLocale(spaceID string, localeID string) (err error) {
 	c.rl.Wait()
 
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/locales/%v", spaceIdentifier, localIdentifier)
+	path := fmt.Sprintf("spaces/%v/locales/%v", spaceID, localeID)
 	_, err = c.sling.New().Delete(path).Receive(nil, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
-		return
 	}
 
 	return
