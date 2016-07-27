@@ -9,7 +9,7 @@ import (
 // API consumers, like mobile apps or websites, typically fetch data by getting
 // entries and assets from one or more spaces.
 type Space struct {
-	System `json:"-"`
+	System `json:"sys"`
 	Name   string `json:"name"`
 }
 
@@ -61,29 +61,22 @@ func (c *contentfulSpace) Convert() *Space {
 	return space
 }
 
-type AllSpacesResponse struct {
-	Spaces []*Space
-	Error  error
-}
-
 // GetAllSpaces returns all spaces associated with the account
-func (c *Client) GetAllSpaces() (response AllSpacesResponse) {
+func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err error) {
 	c.rl.Wait()
 
-	type SpacesResponse struct {
-		Total int `json:"total"`
-		Limit int `json:"limit"`
-		Skip  int `json:"skip"`
-		Sys   struct {
+	type spacesResponse struct {
+		*Pagination
+		Sys struct {
 			Type string `json:"type"`
 		} `json:"sys"`
 		Items []contentfulSpace `json:"items"`
 	}
 
-	spacesData := new(SpacesResponse)
+	results := new(spacesResponse)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces")
-	_, err := c.sling.New().Get(path).Receive(spacesData, contentfulError)
+	_, err = c.sling.New().Get(path).Receive(results, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
@@ -91,16 +84,14 @@ func (c *Client) GetAllSpaces() (response AllSpacesResponse) {
 	}
 
 	if err != nil {
-		response.Error = err
+		return nil, nil, err
 	} else {
-		response.Spaces = make([]*Space, 0)
-
-		for _, space := range spacesData.Items {
-			response.Spaces = append(response.Spaces, space.Convert())
+		for _, space := range results.Items {
+			spaces = append(spaces, space.Convert())
 		}
 	}
 
-	return
+	return spaces, results.Pagination, nil
 }
 
 // CreateSpace will create a space with the provided name. It's important to
