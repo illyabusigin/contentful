@@ -49,12 +49,12 @@ func authorizationHeader(accessToken string) string {
 ////////////////
 
 type System struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        string     `json:"id"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 
-	Type    string `json:"type"`
-	Version int    `json:"version"`
+	Type    string `json:"type,omitempty"`
+	Version int    `json:"version,omitempty"`
 
 	Space *SpaceField `json:"space,omitempty"`
 }

@@ -1,11 +1,10 @@
 package management
 
 import (
-	"fmt"
+	_ "fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
-	"time"
 
 	assert "github.com/stretchr/testify/require"
 )
@@ -110,8 +109,8 @@ func TestUpdateSpaceRequest(t *testing.T) {
 			Type:      "Space",
 			ID:        "space123",
 			Version:   1,
-			CreatedAt: time.Date(2016, 07, 18, 14, 04, 15, 00, time.UTC),
-			UpdatedAt: time.Date(2016, 07, 19, 14, 04, 15, 00, time.UTC),
+			CreatedAt: &createdDate,
+			UpdatedAt: &updatedDate,
 		},
 	}
 
@@ -130,14 +129,13 @@ func TestUpdateSpaceRequest(t *testing.T) {
     "type":"Space",
     "id":"space123",
     "version":1,
-    "createdAt":"2016-07-18T14:04:15Z",
-    "updatedAt":"2016-07-19T14:04:15Z"
+    "createdAt":"2016-07-25T16:00:00Z",
+    "updatedAt":"2016-07-26T16:00:00Z"
   }
 }
 `)
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
-	fmt.Println("JSON:", string(requestJSON))
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
 }
 

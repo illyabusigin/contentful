@@ -2,7 +2,6 @@ package management
 
 import (
 	"fmt"
-	"time"
 )
 
 // Space is a container for content types, entries and assets and other resources.
@@ -21,46 +20,6 @@ func (s *Space) Validate() error {
 	return nil
 }
 
-type contentfulSpace struct {
-	Name string `json:"name"`
-	Sys  struct {
-		Type      string `json:"type"`
-		ID        string `json:"id"`
-		Version   int    `json:"version"`
-		CreatedBy struct {
-			Sys struct {
-				Type     string `json:"type"`
-				LinkType string `json:"linkType"`
-				ID       string `json:"id"`
-			} `json:"sys"`
-		} `json:"createdBy"`
-		CreatedAt time.Time `json:"createdAt"`
-		UpdatedBy struct {
-			Sys struct {
-				Type     string `json:"type"`
-				LinkType string `json:"linkType"`
-				ID       string `json:"id"`
-			} `json:"sys"`
-		} `json:"updatedBy"`
-		UpdatedAt time.Time `json:"updatedAt"`
-	} `json:"sys"`
-}
-
-func (c *contentfulSpace) Convert() *Space {
-	space := new(Space)
-
-	space.ID = c.Sys.ID
-	space.CreatedAt = c.Sys.CreatedAt
-	space.UpdatedAt = c.Sys.UpdatedAt
-
-	space.Type = c.Sys.Type
-	space.Version = c.Sys.Version
-
-	space.Name = c.Name
-
-	return space
-}
-
 // GetAllSpaces returns all spaces associated with the account
 func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err error) {
 	c.rl.Wait()
@@ -70,7 +29,7 @@ func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err 
 		Sys struct {
 			Type string `json:"type"`
 		} `json:"sys"`
-		Items []contentfulSpace `json:"items"`
+		Items []*Space `json:"items"`
 	}
 
 	results := new(spacesResponse)
@@ -85,10 +44,6 @@ func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err 
 
 	if err != nil {
 		return nil, nil, err
-	} else {
-		for _, space := range results.Items {
-			spaces = append(spaces, space.Convert())
-		}
 	}
 
 	return spaces, results.Pagination, nil
@@ -103,18 +58,14 @@ func (c *Client) CreateSpace(space *Space) (created *Space, err error) {
 
 	c.rl.Wait()
 
-	spaceData := new(contentfulSpace)
+	created = new(Space)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces")
-	_, err = c.sling.New().Post(path).BodyJSON(space).Receive(spaceData, contentfulError)
+	_, err = c.sling.New().Post(path).BodyJSON(space).Receive(created, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
 		return
-	}
-
-	if err == nil {
-		created = spaceData.Convert()
 	}
 
 	return
@@ -124,18 +75,14 @@ func (c *Client) CreateSpace(space *Space) (created *Space, err error) {
 func (c *Client) FetchSpace(identifier string) (space *Space, err error) {
 	c.rl.Wait()
 
-	spaceData := new(contentfulSpace)
+	space = new(Space)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v", identifier)
-	_, err = c.sling.New().Get(path).Receive(spaceData, contentfulError)
+	_, err = c.sling.New().Get(path).Receive(space, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
 		return
-	}
-
-	if err == nil {
-		space = spaceData.Convert()
 	}
 
 	return
@@ -149,22 +96,18 @@ func (c *Client) UpdateSpace(space *Space) (updated *Space, err error) {
 
 	c.rl.Wait()
 
-	spaceData := new(contentfulSpace)
+	updated = new(Space)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v", space.System.ID)
 	_, err = c.sling.New().
 		Set("X-Contentful-Version", fmt.Sprintf("%v", space.System.Version)).
 		Put(path).
 		BodyJSON(space).
-		Receive(spaceData, contentfulError)
+		Receive(updated, contentfulError)
 
 	if contentfulError.Message != "" {
 		err = contentfulError
 		return
-	}
-
-	if err == nil {
-		updated = spaceData.Convert()
 	}
 
 	return
