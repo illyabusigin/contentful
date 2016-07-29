@@ -1,13 +1,31 @@
 package management
 
 import (
-	_ "fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
 	assert "github.com/stretchr/testify/require"
 )
+
+func TestSpaceValidationFailures(t *testing.T) {
+	var validationTests = []struct {
+		space    Space
+		expected string
+	}{
+		{Space{}, "Empty space should return an error"},
+		{Space{Name: ""}, "Space with empty name should return error"},
+	}
+
+	for _, test := range validationTests {
+		err := test.space.Validate()
+		assert.NotNil(t, err, test.expected)
+	}
+
+	goodSpace := Space{Name: "test"}
+	err := goodSpace.Validate()
+	assert.Nil(t, err, "Error should be nil since the space is valid!")
+}
 
 func TestFetchAllSpacesRequest(t *testing.T) {
 	client := NewClient(accessToken, version, nil)
@@ -63,31 +81,46 @@ func TestCreateSpaceRequest(t *testing.T) {
 	doer.err = errIntercept
 	client.sling = client.sling.New().Doer(doer)
 
-	_, err := client.CreateAsset(&goodFile)
+	newSpace := &Space{
+		Name: "Test Space",
+		System: System{
+			Type:      "Space",
+			ID:        "space123",
+			Version:   1,
+			CreatedAt: &createdDate,
+			UpdatedAt: &updatedDate,
+		},
+	}
+
+	_, err := client.CreateSpace(newSpace)
 	req := doer.request
 
 	assert.Equal(t, err, errIntercept)
 	assert.NotNil(t, req)
-	assert.Equal(t, "https://api.contentful.com/spaces/abc123/assets", req.URL.String())
+	assert.Equal(t, "https://api.contentful.com/spaces", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodPost)
 
 	expectedJSON := string(`{
-    "fields": {
-        "title": {
-            "en-US": "Cat pictures"
-        },
-        "file": {
-            "en-US": {
-                "contentType": "image/png",
-                "fileName": "cats.png",
-                "upload": "//images.contentful.com/haian05f1d28/6rDHXkKllCOwoIiKMqgUQu/ea8f4bbba7581f21a32a3e68f56850e3/med106330_1210_bacon_pancakes_horiz.jpg"
-            }
-        }
-    }
+    "sys": {
+        "id": "space123",
+        "createdAt": "2016-07-25T16:00:00Z",
+        "updatedAt": "2016-07-26T16:00:00Z",
+        "type": "Space",
+        "version": 1
+    },
+    "name": "Test Space"
 }`)
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
+
+	// nil space
+	_, err = client.CreateSpace(nil)
+	assert.NotNil(t, err)
+
+	// invalid space
+	_, err = client.CreateSpace(&Space{})
+	assert.NotNil(t, err)
 }
 
 func TestCreateSpaceResponseSuccess(t *testing.T) {
@@ -137,6 +170,9 @@ func TestUpdateSpaceRequest(t *testing.T) {
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
+
+	_, err = client.UpdateSpace(nil)
+	assert.NotNil(t, err)
 }
 
 func TestUpdateSpaceResponseSuccess(t *testing.T) {

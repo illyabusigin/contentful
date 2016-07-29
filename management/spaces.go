@@ -12,6 +12,8 @@ type Space struct {
 	Name   string `json:"name"`
 }
 
+// Validate will validate the space. An error is returned if the space type is
+// not  valid.
 func (s *Space) Validate() error {
 	if s.Name == "" {
 		return fmt.Errorf("Space must specify a valid name")
@@ -20,7 +22,7 @@ func (s *Space) Validate() error {
 	return nil
 }
 
-// GetAllSpaces returns all spaces associated with the account
+// FetchAllSpaces returns all spaces associated with the account
 func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err error) {
 	c.rl.Wait()
 
@@ -37,21 +39,16 @@ func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err 
 	path := fmt.Sprintf("spaces")
 	_, err = c.sling.New().Get(path).Receive(results, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return spaces, results.Pagination, nil
+	return spaces, results.Pagination, handleError(err, contentfulError)
 }
 
 // CreateSpace will create a space with the provided name. It's important to
 // note that names are not unique between spaces.
 func (c *Client) CreateSpace(space *Space) (created *Space, err error) {
+	if space == nil {
+		return nil, fmt.Errorf("CreateSpace failed. Space cannot be nil!")
+	}
+
 	if err = space.Validate(); err != nil {
 		return
 	}
@@ -63,12 +60,7 @@ func (c *Client) CreateSpace(space *Space) (created *Space, err error) {
 	path := fmt.Sprintf("spaces")
 	_, err = c.sling.New().Post(path).BodyJSON(space).Receive(created, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return created, handleError(err, contentfulError)
 }
 
 // FetchSpace will return a space for the given identifier.
@@ -80,12 +72,7 @@ func (c *Client) FetchSpace(identifier string) (space *Space, err error) {
 	path := fmt.Sprintf("spaces/%v", identifier)
 	_, err = c.sling.New().Get(path).Receive(space, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return space, handleError(err, contentfulError)
 }
 
 // UpdateSpace will update the space
@@ -105,12 +92,7 @@ func (c *Client) UpdateSpace(space *Space) (updated *Space, err error) {
 		BodyJSON(space).
 		Receive(updated, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return updated, handleError(err, contentfulError)
 }
 
 // DeleteSpace will delete an existing space by doing a DELETE request to /spaces/ID.
@@ -123,10 +105,5 @@ func (c *Client) DeleteSpace(identifier string) (err error) {
 	path := fmt.Sprintf("spaces/%v", identifier)
 	_, err = c.sling.New().Delete(path).Receive(nil, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return handleError(err, contentfulError)
 }
