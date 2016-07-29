@@ -69,17 +69,29 @@ type FieldValidation struct {
 // the data type defined in the content type. There is a limit
 // of 50 fields per content type.
 type ContentType struct {
-	System  `json:"sys"`
-	SpaceID string `json:"-"`
+	System `json:"sys"`
 
-	Name         string  `json:"-"`
+	Name         string  `json:"name"`
 	Description  string  `json:"description,omitempty"`
 	DisplayField string  `json:"displayField,omitempty"`
 	Fields       []Field `json:"fields"`
 }
 
-// Validate the ContentType
+// Validate will validate the content type. An error is returned if the content
+// type is not  valid.
 func (t *ContentType) Validate() error {
+	if len(t.Name) == 0 {
+		return fmt.Errorf("Content type name cannot be empty")
+	}
+
+	if t.Space == nil || t.Space.ID == "" {
+		return fmt.Errorf("Locale must specify valid System.Space.ID!")
+	}
+
+	if len(t.ID) == 0 {
+		return fmt.Errorf("Content type must specify an identifier!")
+	}
+
 	return nil
 }
 
@@ -114,24 +126,24 @@ func (c *Client) FetchContentTypes(spaceID string, published bool, limit int, of
 
 		return fmt.Sprintf("spaces/%v/content_types", spaceID)
 	}
-	_, err = c.sling.New().
+
+	req, err := c.sling.New().
 		Get(path()).
-		Receive(results, contentfulError)
+		Request()
 
 	if err != nil {
 		return
 	}
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
+	// Add query parameters
+	q := req.URL.Query()
+	q.Set("skip", fmt.Sprintf("%v", offset))
+	q.Set("limit", fmt.Sprintf("%v", limit))
+	req.URL.RawQuery = q.Encode()
 
-	for _, contentType := range results.Items {
-		contentType.SpaceID = spaceID
-	}
+	_, err = c.sling.Do(req, results, contentfulError)
 
-	return results.Items, results.Pagination, nil
+	return results.Items, results.Pagination, handleError(err, contentfulError)
 
 }
 
@@ -148,26 +160,16 @@ func (c *Client) CreateContentType(contentType *ContentType) (created *ContentTy
 
 	c.rl.Wait()
 
-	createdData := new(ContentType)
+	created = new(ContentType)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/content_types/%v", contentType.SpaceID, contentType.ID)
+	path := fmt.Sprintf("spaces/%v/content_types/%v", contentType.Space.ID, contentType.ID)
 	_, err = c.sling.New().
 		Put(path).
 		Set("X-Contentful-Version", fmt.Sprintf("%v", contentType.Version)).
 		BodyJSON(contentType).
-		Receive(createdData, contentfulError)
+		Receive(created, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	if err == nil {
-		created = createdData
-		created.SpaceID = contentType.SpaceID
-	}
-
-	return
+	return created, handleError(err, contentfulError)
 }
 
 // FetchContentType will return a content type for the specified space and
@@ -180,16 +182,12 @@ func (c *Client) FetchContentType(spaceID string, contentTypeID string) (content
 
 	c.rl.Wait()
 
+	contentType = new(ContentType)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/content_types/%v", spaceID, contentTypeID)
 	_, err = c.sling.New().Get(path).Receive(contentType, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return contentType, handleError(err, contentfulError)
 }
 
 // UpdateContentType will update the content type with the specified changes.
@@ -199,31 +197,20 @@ func (c *Client) UpdateContentType(contentType *ContentType) (updated *ContentTy
 
 // DeleteContentType will delete a content type. Before you can delete a content
 // type you need to deactivate it.
-func (c *Client) DeleteContentType(contentType *ContentType) (err error) {
-	if contentType == nil {
-		return fmt.Errorf("DeleteContentType failed. Type argument was nil!")
-	}
-
+func (c *Client) DeleteContentType(spaceID string, contentTypeID string) (err error) {
 	c.rl.Wait()
 
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/content_types/%v", contentType.SpaceID, contentType.ID)
+	path := fmt.Sprintf("spaces/%v/content_types/%v", spaceID, contentTypeID)
 	_, err = c.sling.New().
 		Delete(path).
-		Set("X-Contentful-Version", fmt.Sprintf("%v", contentType.Version)).
-		BodyJSON(contentType).
 		Receive(nil, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return handleError(err, contentfulError)
 }
 
 // ActivateContentType makes the content type available for creating entries
-func (c *Client) ActivateContentType(contentType *ContentType) (current *ContentType, err error) {
+func (c *Client) ActivateContentType(contentType *ContentType) (activated *ContentType, err error) {
 	if contentType == nil {
 		return nil, fmt.Errorf("CreateContentType failed. Type argument was nil!")
 	}
@@ -234,29 +221,19 @@ func (c *Client) ActivateContentType(contentType *ContentType) (current *Content
 
 	c.rl.Wait()
 
-	publishedType := new(ContentType)
+	activated = new(ContentType)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/content_types/%v/published", contentType.SpaceID, contentType.ID)
+	path := fmt.Sprintf("spaces/%v/content_types/%v/published", contentType.Space.ID, contentType.ID)
 	_, err = c.sling.New().
 		Put(path).
 		Set("X-Contentful-Version", fmt.Sprintf("%v", contentType.Version)).
-		Receive(publishedType, contentfulError)
+		Receive(activated, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	if err == nil {
-		current = publishedType
-		current.SpaceID = publishedType.SpaceID
-	}
-
-	return
+	return activated, handleError(err, contentfulError)
 }
 
 // DeactivateContentType removes the availability for creating entries
-func (c *Client) DeactivateContentType(contentType *ContentType) (current *ContentType, err error) {
+func (c *Client) DeactivateContentType(contentType *ContentType) (deactivated *ContentType, err error) {
 	if contentType == nil {
 		return nil, fmt.Errorf("CreateContentType failed. Type argument was nil!")
 	}
@@ -267,23 +244,13 @@ func (c *Client) DeactivateContentType(contentType *ContentType) (current *Conte
 
 	c.rl.Wait()
 
-	publishedType := new(ContentType)
+	deactivated = new(ContentType)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/content_types/%v/published", contentType.SpaceID, contentType.ID)
+	path := fmt.Sprintf("spaces/%v/content_types/%v/published", contentType.Space.ID, contentType.ID)
 	_, err = c.sling.New().
 		Delete(path).
 		Set("X-Contentful-Version", fmt.Sprintf("%v", contentType.Version)).
-		Receive(publishedType, contentfulError)
+		Receive(deactivated, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	if err == nil {
-		current = publishedType
-		current.SpaceID = publishedType.SpaceID
-	}
-
-	return
+	return deactivated, handleError(err, contentfulError)
 }
