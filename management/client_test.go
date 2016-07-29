@@ -1,6 +1,7 @@
 package management
 
 import (
+	"errors"
 	"testing"
 
 	assert "github.com/stretchr/testify/require"
@@ -25,4 +26,20 @@ func TestContentTypeHeader(t *testing.T) {
 func TestAuthorizationHeader(t *testing.T) {
 	header := authorizationHeader("access_token")
 	assert.Equal(t, "Bearer access_token", header)
+}
+
+func TestHandleError(t *testing.T) {
+	reqErr := errors.New("Request error!")
+	assert.Equal(t, reqErr, handleError(reqErr, nil))
+
+	validError := &ContentfulError{Message: "Something went wrong"}
+	assert.Equal(t, validError, handleError(nil, validError))
+
+	invalidError := &ContentfulError{}
+	assert.Nil(t, handleError(nil, invalidError))
+}
+
+func TestContentfulError(t *testing.T) {
+	err := ContentfulError{Message: "Something went wrong"}
+	assert.Equal(t, err.Message, err.Error())
 }
