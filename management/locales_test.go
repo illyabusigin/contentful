@@ -9,7 +9,6 @@ import (
 )
 
 func TestLocaleValidationFailures(t *testing.T) {
-
 	var validationTests = []struct {
 		locale   Locale
 		expected string
@@ -17,7 +16,7 @@ func TestLocaleValidationFailures(t *testing.T) {
 		{Locale{}, "Empty locale should return an error"},
 		{Locale{Name: ""}, "Locale with empty name should return error"},
 		{Locale{Name: "Test", Code: ""}, "Locale with empty code should return error"},
-		{Locale{Name: "English", Code: "en-US", System: System{Space: &SpaceField{Link: &Link{ID: ""}}}}, "Locale with empty space ID should return error"},
+		{Locale{Name: "English", Code: "en-US", System: System{Space: &Link{LinkData: &LinkData{ID: ""}}}}, "Locale with empty space ID should return error"},
 	}
 
 	for _, test := range validationTests {
@@ -92,8 +91,8 @@ func TestCreateLocaleRequest(t *testing.T) {
 		Code: "de-DE",
 		System: System{
 			ID: "123",
-			Space: &SpaceField{
-				Link: &Link{
+			Space: &Link{
+				LinkData: &LinkData{
 					ID:       "space123",
 					LinkType: "Space",
 					Type:     "Link",
@@ -129,6 +128,14 @@ func TestCreateLocaleRequest(t *testing.T) {
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
+
+	// nil locale
+	_, err = client.CreateLocale(nil)
+	assert.NotNil(t, err)
+
+	// invalid locale
+	_, err = client.CreateLocale(&Locale{})
+	assert.NotNil(t, err)
 }
 
 func TestCreateLocaleResponseSuccess(t *testing.T) {
@@ -157,8 +164,8 @@ func TestUpdateLocaleRequest(t *testing.T) {
 			Version:   1,
 			CreatedAt: &createdDate,
 			UpdatedAt: &updatedDate,
-			Space: &SpaceField{
-				Link: &Link{
+			Space: &Link{
+				LinkData: &LinkData{
 					ID:       "space123",
 					LinkType: "Space",
 					Type:     "Link",
@@ -200,6 +207,14 @@ func TestUpdateLocaleRequest(t *testing.T) {
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
+
+	// nil locale
+	_, err = client.UpdateLocale(nil)
+	assert.NotNil(t, err)
+
+	// invalid locale
+	_, err = client.UpdateLocale(&Locale{})
+	assert.NotNil(t, err)
 }
 
 func TestUpdateLocaleResponseSuccess(t *testing.T) {

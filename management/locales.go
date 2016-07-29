@@ -16,6 +16,8 @@ type Locale struct {
 	Fallback string `json:"fallbackCode,omitempty"`
 }
 
+// Validate will validate the locale. An error is returned if the content type
+// is not  valid.
 func (l *Locale) Validate() error {
 	if len(l.Name) == 0 {
 		return fmt.Errorf("Locale name cannot be empty")
@@ -49,21 +51,15 @@ func (c *Client) FetchAllLocales(spaceID string) (locales []*Locale, pagination 
 	path := fmt.Sprintf("spaces/%v/locales", spaceID)
 	_, err = c.sling.New().Get(path).Receive(results, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return results.Items, results.Pagination, nil
+	return results.Items, results.Pagination, handleError(err, contentfulError)
 }
 
 // CreateLocale will create a locale with the provided information. It's important
 // to note that you cannot create two lcoales with the same locale code.
 func (c *Client) CreateLocale(locale *Locale) (created *Locale, err error) {
+	if locale == nil {
+		return nil, fmt.Errorf("CreateLocale failed, locale cannot be nil!")
+	}
 	if err = locale.Validate(); err != nil {
 		return
 	}
@@ -75,11 +71,7 @@ func (c *Client) CreateLocale(locale *Locale) (created *Locale, err error) {
 	path := fmt.Sprintf("spaces/%v/locales", locale.Space.ID)
 	_, err = c.sling.New().Post(path).BodyJSON(locale).Receive(created, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-	}
-
-	return
+	return created, handleError(err, contentfulError)
 }
 
 // FetchLocale will return a locale for the given space and locale identifier.
@@ -91,11 +83,7 @@ func (c *Client) FetchLocale(spaceID string, localeID string) (locale *Locale, e
 	path := fmt.Sprintf("spaces/%v/locales/%v", spaceID, localeID)
 	_, err = c.sling.New().Get(path).Receive(locale, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-	}
-
-	return
+	return locale, handleError(err, contentfulError)
 }
 
 // UpdateLocale will update the locale
@@ -119,11 +107,7 @@ func (c *Client) UpdateLocale(locale *Locale) (updated *Locale, err error) {
 		BodyJSON(locale).
 		Receive(updated, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-	}
-
-	return
+	return updated, handleError(err, contentfulError)
 }
 
 // DeleteLocale will delete an existing locale. Please note that it
@@ -137,9 +121,5 @@ func (c *Client) DeleteLocale(spaceID string, localeID string) (err error) {
 	path := fmt.Sprintf("spaces/%v/locales/%v", spaceID, localeID)
 	_, err = c.sling.New().Delete(path).Receive(nil, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-	}
-
-	return
+	return handleError(err, contentfulError)
 }
