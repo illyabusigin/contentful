@@ -54,8 +54,8 @@ var (
 
 			Version: 1,
 			Type:    "Asset",
-			Space: &SpaceField{
-				Link: &Link{
+			Space: &Link{
+				LinkData: &LinkData{
 					Type:     LinkType,
 					LinkType: "Space",
 					ID:       "haian05f1d28",
@@ -70,8 +70,6 @@ var (
 			}},
 			Title: map[string]string{"en-US": "Bacon Pancakes"},
 		},
-		Published: true,
-		Processed: true,
 	}
 )
 
@@ -84,7 +82,8 @@ func TestFileValidationFailures(t *testing.T) {
 	}{
 		{File{}, "Empty file should return an error"},
 		{File{SpaceID: "test_ID", Fields: FileFields{}}, "File with empty fields should return error"},
-		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}}}, "File with file fields should return error"},
+		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}}}, "File without file fields should return error"},
+		{File{SpaceID: "test_ID", Fields: FileFields{File: map[string]FileData{"en-US": FileData{Name: ""}}}}, "File without title fields should return error"},
 		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}, File: map[string]FileData{"en-US": FileData{Name: ""}}}}, "File with empty file name should return error"},
 		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}, File: map[string]FileData{"en-US": FileData{Name: "TBD", MIMEType: ""}}}}, "File with empty MIMEType should return error"},
 		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}, File: map[string]FileData{"en-US": FileData{Name: "TBD", MIMEType: "image/png", URL: &emptyURL}}}}, "File with empty URL should return error"},
@@ -109,7 +108,8 @@ func TestAssetValidationFailures(t *testing.T) {
 		asset    Asset
 		expected string
 	}{
-		{Asset{System: System{}}, "Empty file should return an error"},
+		{Asset{System: System{}}, "Empty asset should return an error"},
+		{Asset{System: System{ID: "123"}}, "Asset without ID should return an error"},
 	}
 
 	for _, test := range validationTests {
@@ -152,6 +152,15 @@ func TestCreateAssetRequest(t *testing.T) {
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
+
+	// Test with nil file
+	_, err = client.CreateAsset(nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "CreateAsset failed. Entry must not be nil!")
+
+	// Test with invalid file
+	_, err = client.CreateAsset(&File{})
+	assert.NotNil(t, err)
 }
 
 func TestCreateAssetResponse(t *testing.T) {
@@ -277,6 +286,15 @@ func TestUpdateAssetRequest(t *testing.T) {
 
 	requestJSON, _ := ioutil.ReadAll(req.Body)
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
+
+	// Test with nil asset
+	_, err = client.UpdateAsset(nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "UpdateAsset failed. Asset must not be nil!")
+
+	// Test with empty asset
+	_, err = client.UpdateAsset(&Asset{})
+	assert.NotNil(t, err)
 }
 
 func TestUpdateAssetResponseSuccess(t *testing.T) {
@@ -325,7 +343,7 @@ func TestFetchAssetsSuccessRequest(t *testing.T) {
 
 	assert.Equal(t, err, errIntercept)
 	assert.NotNil(t, req)
-	assert.Equal(t, "https://api.contentful.com/spaces/space1234/assets", req.URL.String())
+	assert.Equal(t, "https://api.contentful.com/spaces/space1234/assets?limit=100&skip=0", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodGet)
 
 	// Public assets
@@ -335,8 +353,27 @@ func TestFetchAssetsSuccessRequest(t *testing.T) {
 
 	assert.Equal(t, err, errIntercept)
 	assert.NotNil(t, req)
-	assert.Equal(t, "https://api.contentful.com/spaces/space1234/public/assets", req.URL.String())
+	assert.Equal(t, "https://api.contentful.com/spaces/space1234/public/assets?limit=100&skip=0", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodGet)
+
+	// Invalid space ID
+	_, _, err = client.FetchAssets("", false, 100, 0)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "FetchAssets failed. Space identifier is not valid!")
+
+	// Invalid limit
+	_, _, err = client.FetchAssets(spaceID, false, -100, 0)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "FetchAssets failed. Limit must be greater than 0")
+
+	//Passing bogus limit, resetting to 100
+	_, _, err = client.FetchAssets(spaceID, false, 1000, 0)
+	req = doer.request
+
+	assert.Equal(t, err, errIntercept)
+	assert.NotNil(t, req)
+	assert.Equal(t, "https://api.contentful.com/spaces/space1234/assets?limit=100&skip=0", req.URL.String())
+
 }
 
 func TestFetchAssetsSuccessResponse(t *testing.T) {
@@ -360,6 +397,16 @@ func TestProcessAssetRequest(t *testing.T) {
 	assert.NotNil(t, req)
 	assert.Equal(t, "https://api.contentful.com/spaces/haian05f1d28/assets/6rDHXkKllCOwoIiKMqgUQu/files/en-US/process", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodPut)
+
+	// Passing nil asset
+	err = client.ProcessAsset(nil, "en-US")
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "ProcessAsset failed. Asset cannot be nil!")
+
+	// Passing invalid locale
+	err = client.ProcessAsset(&assetToProcess, "")
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "ProcessAsset failed. Locale cannot be empty!")
 }
 
 func TestProcessAssetResponse(t *testing.T) {
@@ -384,6 +431,11 @@ func TestPublishAssetRequest(t *testing.T) {
 	assert.NotNil(t, req)
 	assert.Equal(t, "https://api.contentful.com/spaces/haian05f1d28/assets/6rDHXkKllCOwoIiKMqgUQu/published", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodPut)
+
+	// Passing nil asset
+	_, err = client.PublishAsset(nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "PublishAsset failed. Asset cannot be nil!")
 }
 
 func TestPublishAssetSuccessResponse(t *testing.T) {
@@ -408,6 +460,11 @@ func TestUnpublishAssetRequest(t *testing.T) {
 	assert.NotNil(t, req)
 	assert.Equal(t, "https://api.contentful.com/spaces/haian05f1d28/assets/6rDHXkKllCOwoIiKMqgUQu/published", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodDelete)
+
+	// Passing nil asset
+	_, err = client.UnpublishAsset(nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "UnpublishAsset failed. Asset cannot be nil!")
 }
 
 func TestUnpublishAssetSuccessResponse(t *testing.T) {
@@ -431,6 +488,15 @@ func TestArchiveAssetRequest(t *testing.T) {
 	assert.NotNil(t, req)
 	assert.Equal(t, "https://api.contentful.com/spaces/haian05f1d28/assets/6rDHXkKllCOwoIiKMqgUQu/archived", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodPut)
+
+	// Passing nil asset
+	_, err = client.ArchiveAsset(nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "ArchiveAsset failed. Asset cannot be nil!")
+
+	// Test with invalid file
+	_, err = client.ArchiveAsset(&Asset{})
+	assert.NotNil(t, err)
 }
 
 func TestArchiveAssetResponseSuccess(t *testing.T) {
@@ -455,8 +521,42 @@ func TestUnarchiveAssetRequest(t *testing.T) {
 	assert.NotNil(t, req)
 	assert.Equal(t, "https://api.contentful.com/spaces/haian05f1d28/assets/6rDHXkKllCOwoIiKMqgUQu/archived", req.URL.String())
 	assert.Equal(t, req.Method, http.MethodDelete)
+
+	// Passing nil asset
+	_, err = client.UnarchiveAsset(nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "UnarchiveAsset failed. Asset cannot be nil!")
+
+	// Test with invalid file
+	_, err = client.UnarchiveAsset(&Asset{})
+	assert.NotNil(t, err)
 }
 
 func TestUnarchiveAssetResponseSuccess(t *testing.T) {
 
+}
+
+func TestDeleteAssetRequest(t *testing.T) {
+	client := NewClient(accessToken, version, nil)
+	assert.NotNil(t, client, "Client should not be nil")
+
+	// Inject request interceptor
+	doer := &interceptor{}
+	doer.err = errIntercept
+	client.sling = client.sling.New().Doer(doer)
+
+	assetToDelete := goodAsset
+
+	err := client.DeleteAsset(&assetToDelete)
+	req := doer.request
+
+	assert.Equal(t, err, errIntercept)
+	assert.NotNil(t, req)
+	assert.Equal(t, "https://api.contentful.com/spaces/haian05f1d28/assets/6rDHXkKllCOwoIiKMqgUQu", req.URL.String())
+	assert.Equal(t, req.Method, http.MethodDelete)
+
+	// Passing nil
+	err = client.DeleteAsset(nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "DeleteAsset failed. Asset cannot be nil!")
 }

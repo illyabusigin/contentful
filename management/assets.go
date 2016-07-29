@@ -14,9 +14,6 @@ import (
 type Asset struct {
 	System `json:"sys"`
 	Fields AssetFields `json:"fields"`
-
-	Processed bool `json:"-"`
-	Published bool `json:"-"`
 }
 
 // AssetFields contains all asset information.
@@ -36,12 +33,13 @@ type AssetData struct {
 
 // Validate will validate the Asset to ensure all necessary fields are present.
 func (a *Asset) Validate() error {
-	if a.System.Space == nil {
-		return fmt.Errorf("Asset validation failed. System.Space.ID cannot be empty!")
+	if a.System.ID == "" {
+		fmt.Println("system ID is empty!")
+		return fmt.Errorf("Asset validation failed. System.ID cannot be empty!")
 	}
 
-	if a.System.ID == "" {
-		return fmt.Errorf("Asset validation failed. System.ID cannot be empty!")
+	if a.System.Space == nil {
+		return fmt.Errorf("Asset validation failed. System.Space.ID cannot be empty!")
 	}
 
 	return nil
@@ -85,7 +83,7 @@ func (f *File) Validate() error {
 		return fmt.Errorf("Filed validation failed. Fields.File cannot be empty!")
 	}
 
-	if f.Fields.File == nil || len(f.Fields.Title) == 0 {
+	if f.Fields.Title == nil || len(f.Fields.Title) == 0 {
 		return fmt.Errorf("Filed validation failed. Fields.Title cannot be empty!")
 	}
 
@@ -107,6 +105,7 @@ func (f *File) Validate() error {
 func (c *Client) CreateAsset(file *File) (created *Asset, err error) {
 	if file == nil {
 		err = fmt.Errorf("CreateAsset failed. Entry must not be nil!")
+		return
 	}
 
 	if err = file.Validate(); err != nil {
@@ -116,6 +115,7 @@ func (c *Client) CreateAsset(file *File) (created *Asset, err error) {
 	c.rl.Wait()
 	created = &Asset{}
 
+	created = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets", file.SpaceID)
 	_, err = c.sling.New().
@@ -123,18 +123,14 @@ func (c *Client) CreateAsset(file *File) (created *Asset, err error) {
 		BodyJSON(file).
 		Receive(created, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return created, handleError(err, contentfulError)
 }
 
 // UpdateAsset will update the asset
 func (c *Client) UpdateAsset(asset *Asset) (updated *Asset, err error) {
 	if asset == nil {
 		err = fmt.Errorf("UpdateAsset failed. Asset must not be nil!")
+		return
 	}
 
 	if err = asset.Validate(); err != nil {
@@ -143,6 +139,7 @@ func (c *Client) UpdateAsset(asset *Asset) (updated *Asset, err error) {
 
 	c.rl.Wait()
 
+	updated = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v", asset.System.Space.ID, asset.System.ID)
 	_, err = c.sling.New().
@@ -151,18 +148,14 @@ func (c *Client) UpdateAsset(asset *Asset) (updated *Asset, err error) {
 		BodyJSON(asset).
 		Receive(updated, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return updated, handleError(err, contentfulError)
 }
 
 // FetchAsset will return the specified asset.
 func (c *Client) FetchAsset(spaceID string, assetID string) (asset *Asset, err error) {
 	c.rl.Wait()
 
+	asset = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v", spaceID, assetID)
 	_, err = c.sling.New().
@@ -170,12 +163,7 @@ func (c *Client) FetchAsset(spaceID string, assetID string) (asset *Asset, err e
 		BodyJSON(asset).
 		Receive(asset, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return asset, handleError(err, contentfulError)
 }
 
 // FetchAssets will return all assets associated with a space. You can toggle
@@ -219,17 +207,14 @@ func (c *Client) FetchAssets(spaceID string, published bool, limit int, offset i
 	}
 
 	// Add query parameters
-	req.URL.Query().Set("skip", fmt.Sprintf("%v", offset))
-	req.URL.Query().Set("limit", fmt.Sprintf("%v", limit))
+	q := req.URL.Query()
+	q.Set("skip", fmt.Sprintf("%v", offset))
+	q.Set("limit", fmt.Sprintf("%v", limit))
+	req.URL.RawQuery = q.Encode()
 
 	_, err = c.sling.Do(req, results, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return results.Items, results.Pagination, err
+	return results.Items, results.Pagination, handleError(err, contentfulError)
 }
 
 // ProcessAsset process the asset. This uploads the asset to
@@ -240,6 +225,10 @@ func (c *Client) ProcessAsset(asset *Asset, localeCode string) (err error) {
 		return fmt.Errorf("ProcessAsset failed. Asset cannot be nil!")
 	}
 
+	if localeCode == "" {
+		return fmt.Errorf("ProcessAsset failed. Locale cannot be empty!")
+	}
+
 	c.rl.Wait()
 
 	contentfulError := new(ContentfulError)
@@ -248,12 +237,7 @@ func (c *Client) ProcessAsset(asset *Asset, localeCode string) (err error) {
 		Put(path).
 		Receive(nil, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return handleError(err, contentfulError)
 }
 
 // PublishAsset will make the asset available via the Content Delivery API.
@@ -264,6 +248,7 @@ func (c *Client) PublishAsset(asset *Asset) (published *Asset, err error) {
 
 	c.rl.Wait()
 
+	published = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v/published", asset.Space.ID, asset.ID)
 	_, err = c.sling.New().
@@ -271,12 +256,7 @@ func (c *Client) PublishAsset(asset *Asset) (published *Asset, err error) {
 		Set("X-Contentful-Version", fmt.Sprintf("%v", asset.System.Version)).
 		Receive(published, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return published, handleError(err, contentfulError)
 }
 
 // UnpublishAsset will make the asset unavailable via the Content Delivery API.
@@ -287,18 +267,14 @@ func (c *Client) UnpublishAsset(asset *Asset) (unpublished *Asset, err error) {
 
 	c.rl.Wait()
 
+	unpublished = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v/published", asset.Space.ID, asset.ID)
 	_, err = c.sling.New().
 		Delete(path).
 		Receive(unpublished, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return unpublished, handleError(err, contentfulError)
 }
 
 // DeleteAsset will delete the specified asset
@@ -315,19 +291,15 @@ func (c *Client) DeleteAsset(asset *Asset) (err error) {
 		Delete(path).
 		Receive(nil, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return handleError(err, contentfulError)
 }
 
 // ArchiveAsset will archive the asset. An asset can only be archived when they
 // are not published. If the asset is published you must first unpublish it.
 func (c *Client) ArchiveAsset(asset *Asset) (archived *Asset, err error) {
 	if asset == nil {
-		err = fmt.Errorf("ArchiveAsset failed. Entry must not be nil!")
+		err = fmt.Errorf("ArchiveAsset failed. Asset cannot be nil!")
+		return
 	}
 
 	if err = asset.Validate(); err != nil {
@@ -336,24 +308,21 @@ func (c *Client) ArchiveAsset(asset *Asset) (archived *Asset, err error) {
 
 	c.rl.Wait()
 
+	archived = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v/archived", asset.Space.ID, asset.System.ID)
 	_, err = c.sling.New().
 		Put(path).
 		Receive(archived, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return archived, handleError(err, contentfulError)
 }
 
 // UnarchiveAsset will unarchive the asset.
 func (c *Client) UnarchiveAsset(asset *Asset) (unarchived *Asset, err error) {
 	if asset == nil {
-		err = fmt.Errorf("UnarchiveAsset failed. Entry must not be nil!")
+		err = fmt.Errorf("UnarchiveAsset failed. Asset cannot be nil!")
+		return
 	}
 
 	if err = asset.Validate(); err != nil {
@@ -362,18 +331,12 @@ func (c *Client) UnarchiveAsset(asset *Asset) (unarchived *Asset, err error) {
 
 	c.rl.Wait()
 
-	unarchived = &Asset{}
-
+	unarchived = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v/archived", asset.Space.ID, asset.System.ID)
 	_, err = c.sling.New().
 		Delete(path).
 		Receive(unarchived, contentfulError)
 
-	if contentfulError.Message != "" {
-		err = contentfulError
-		return
-	}
-
-	return
+	return unarchived, handleError(err, contentfulError)
 }
