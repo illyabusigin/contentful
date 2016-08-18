@@ -43,24 +43,33 @@ type Field struct {
 
 // FieldValidation describes validation rules associated with a field, if any.
 type FieldValidation struct {
-	Size *struct {
-		Min *float64
-		Max *float64
-	} `json:"size,omitempty"`
-
-	DateRange *struct {
-		Min *time.Time
-		Max *time.Time
-	} `json:"dateRange,omitempty"`
-
-	RegularExpression *struct {
-		Pattern string
-	} `json:"regexp,omitempty"`
+	Size              *SizeFieldValidation      `json:"size,omitempty"`
+	DateRange         *DateRangeFieldValidation `json:"dateRange,omitempty"`
+	RegularExpression *RegExValidation          `json:"regexp,omitempty"`
 
 	LinkMIMETypeGroup string        `json:"linkMimetypeGroup,omitempty"`
 	LinkContentTypes  []string      `json:"linkContentType,omitempty"`
 	In                []interface{} `json:"in,omitempty"`
 	Message           *string       `json:"message,omitempty"`
+}
+
+// RegExFieldValidation permits validation with regular expression.
+type RegExFieldValidation struct {
+	Pattern string `json:"pattern"`
+}
+
+// SizeFieldValidation permits validation with size. You can specify
+// either minimum size, maximum size, or both.
+type SizeFieldValidation struct {
+	Min *float64 `json:"min,omitempty"`
+	Max *float64 `json:"max,omitempty"`
+}
+
+// DateRangeFieldValidation permits validation with date ranges. You can specify
+// either minimum date, maximum date, or both.
+type DateRangeFieldValidation struct {
+	Min *time.Time `json:"min,omitempty"`
+	Max *time.Time `json:"max,omitempty"`
 }
 
 // ContentType are schemas that define the fields of entries.
