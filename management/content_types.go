@@ -32,6 +32,7 @@ type Field struct {
 	ID          string            `json:"id,omitempty"`
 	Name        string            `json:"name,omitempty"`
 	Type        FieldType         `json:"type,omitempty"`
+	LinkType    string							`json:"linkType,omitempty"`
 	Localized   bool              `json:"localized,omitempty"`
 	Required    bool              `json:"required,omitempty"`
 	Validations []FieldValidation `json:"validations,omitempty"`
@@ -41,11 +42,13 @@ type Field struct {
 	Omitted bool `json:"omitted,omitempty"`
 }
 
+type 
+
 // FieldValidation describes validation rules associated with a field, if any.
 type FieldValidation struct {
 	Size              *SizeFieldValidation      `json:"size,omitempty"`
 	DateRange         *DateRangeFieldValidation `json:"dateRange,omitempty"`
-	RegularExpression *RegExValidation          `json:"regexp,omitempty"`
+	RegularExpression *RegExFieldValidation     `json:"regexp,omitempty"`
 
 	LinkMIMETypeGroup string        `json:"linkMimetypeGroup,omitempty"`
 	LinkContentTypes  []string      `json:"linkContentType,omitempty"`
