@@ -38,7 +38,7 @@ type Field struct {
 	Disabled    bool              `json:"disabled,omitempty"`
 
 	// Omitted fields will stil be present in CMA APIs but omitted from CDA and CPA APIs
-	Omitted bool
+	Omitted bool `json:"omitted,omitempty"`
 }
 
 // FieldValidation describes validation rules associated with a field, if any.
