@@ -29,10 +29,11 @@ const (
 // Each field type corresponds to a JSON type, though there are
 // more field types than JSON types.
 type Field struct {
-	ID          string            `json:"id,omitempty"`
-	Name        string            `json:"name,omitempty"`
-	Type        FieldType         `json:"type,omitempty"`
-	LinkType    string							`json:"linkType,omitempty"`
+	ID       string    `json:"id,omitempty"`
+	Name     string    `json:"name,omitempty"`
+	LinkType string    `json:"linkType,omitempty"`
+	Type     FieldType `json:"type,omitempty"`
+
 	Localized   bool              `json:"localized,omitempty"`
 	Required    bool              `json:"required,omitempty"`
 	Validations []FieldValidation `json:"validations,omitempty"`
@@ -41,8 +42,6 @@ type Field struct {
 	// Omitted fields will stil be present in CMA APIs but omitted from CDA and CPA APIs
 	Omitted bool `json:"omitted,omitempty"`
 }
-
-type 
 
 // FieldValidation describes validation rules associated with a field, if any.
 type FieldValidation struct {
