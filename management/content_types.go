@@ -49,7 +49,7 @@ type FieldValidation struct {
 	DateRange         *DateRangeFieldValidation `json:"dateRange,omitempty"`
 	RegularExpression *RegExFieldValidation     `json:"regexp,omitempty"`
 
-	LinkMIMETypeGroup string        `json:"linkMimetypeGroup,omitempty"`
+	LinkMIMETypeGroup []string      `json:"linkMimetypeGroup,omitempty"`
 	LinkContentTypes  []string      `json:"linkContentType,omitempty"`
 	In                []interface{} `json:"in,omitempty"`
 	Message           *string       `json:"message,omitempty"`
