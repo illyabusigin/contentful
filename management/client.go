@@ -50,11 +50,7 @@ func handleError(reqErr error, err *ContentfulError) error {
 		return reqErr
 	}
 
-	if err.Message != "" {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 ////////////////
@@ -115,7 +111,7 @@ type ContentfulError struct {
 }
 
 func (e *ContentfulError) Error() string {
-	return e.Message
+	return fmt.Sprintf("%v, %v, %v", e.Message, e.RequestID, e.Sys)
 }
 
 // Doer executes http requests.  It is implemented by *http.Client.  You can
