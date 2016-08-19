@@ -34,6 +34,8 @@ type Field struct {
 	LinkType string    `json:"linkType,omitempty"`
 	Type     FieldType `json:"type,omitempty"`
 
+	Items *Field `json:"items,omitempty"`
+
 	Localized   bool              `json:"localized,omitempty"`
 	Required    bool              `json:"required,omitempty"`
 	Validations []FieldValidation `json:"validations,omitempty"`
@@ -54,7 +56,7 @@ type FieldValidation struct {
 	LinkMIMETypeGroup []string      `json:"linkMimetypeGroup,omitempty"`
 	LinkContentTypes  []string      `json:"linkContentType,omitempty"`
 	In                []interface{} `json:"in,omitempty"`
-	Message           *string       `json:"message,omitempty"`
+	Message           string        `json:"message,omitempty"`
 }
 
 // RegExFieldValidation permits validation with regular expression.
@@ -72,8 +74,8 @@ type RangeFieldValidation struct {
 // SizeFieldValidation permits validation with size. You can specify
 // either minimum size, maximum size, or both.
 type SizeFieldValidation struct {
-	Min *float64 `json:"min,omitempty"`
-	Max *float64 `json:"max,omitempty"`
+	Min float64 `json:"min,omitempty"`
+	Max float64 `json:"max,omitempty"`
 }
 
 // AssetImageValidation permits asset validation around size
