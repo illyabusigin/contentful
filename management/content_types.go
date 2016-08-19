@@ -46,6 +46,7 @@ type Field struct {
 // FieldValidation describes validation rules associated with a field, if any.
 type FieldValidation struct {
 	Size                 *SizeFieldValidation      `json:"size,omitempty"`
+	Range                *RangeFieldValidation     `json:"range,omitempty"`
 	DateRange            *DateRangeFieldValidation `json:"dateRange,omitempty"`
 	RegularExpression    *RegExFieldValidation     `json:"regexp,omitempty"`
 	AssetImageValidation *AssetImageValidation     `json:"assetImageDimensions,omitempty"`
@@ -59,6 +60,13 @@ type FieldValidation struct {
 // RegExFieldValidation permits validation with regular expression.
 type RegExFieldValidation struct {
 	Pattern string `json:"pattern"`
+}
+
+// RangeFieldValidation takes optional min and max parameters and validates the range
+// of a value.
+type RangeFieldValidation struct {
+	Min int `json:"min,omitempty"`
+	Max int `json:"max,omitempty"`
 }
 
 // SizeFieldValidation permits validation with size. You can specify
