@@ -45,9 +45,10 @@ type Field struct {
 
 // FieldValidation describes validation rules associated with a field, if any.
 type FieldValidation struct {
-	Size              *SizeFieldValidation      `json:"size,omitempty"`
-	DateRange         *DateRangeFieldValidation `json:"dateRange,omitempty"`
-	RegularExpression *RegExFieldValidation     `json:"regexp,omitempty"`
+	Size                 *SizeFieldValidation      `json:"size,omitempty"`
+	DateRange            *DateRangeFieldValidation `json:"dateRange,omitempty"`
+	RegularExpression    *RegExFieldValidation     `json:"regexp,omitempty"`
+	AssetImageValidation *AssetImageValidation     `json:"assetImageDimensions,omitempty"`
 
 	LinkMIMETypeGroup []string      `json:"linkMimetypeGroup,omitempty"`
 	LinkContentTypes  []string      `json:"linkContentType,omitempty"`
@@ -65,6 +66,12 @@ type RegExFieldValidation struct {
 type SizeFieldValidation struct {
 	Min *float64 `json:"min,omitempty"`
 	Max *float64 `json:"max,omitempty"`
+}
+
+// AssetImageValidation permits asset validation around size
+type AssetImageValidation struct {
+	Width  *SizeFieldValidation `json:"width,omitempty"`
+	Height *SizeFieldValidation `json:"height,omitempty"`
 }
 
 // DateRangeFieldValidation permits validation with date ranges. You can specify
