@@ -50,6 +50,10 @@ func handleError(reqErr error, err *ContentfulError) error {
 		return reqErr
 	}
 
+	if err.RequestID == "" && err.Message == "" {
+		return nil
+	}
+
 	return err
 }
 

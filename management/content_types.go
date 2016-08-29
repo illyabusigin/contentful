@@ -102,7 +102,7 @@ type ContentType struct {
 	Name         string  `json:"name"`
 	Description  string  `json:"description,omitempty"`
 	DisplayField string  `json:"displayField,omitempty"`
-	Fields       []Field `json:"fields"`
+	Fields       []Field `json:"fields,omitempty"`
 }
 
 // Validate will validate the content type. An error is returned if the content
@@ -196,6 +196,10 @@ func (c *Client) CreateContentType(contentType *ContentType) (created *ContentTy
 		Set("X-Contentful-Version", fmt.Sprintf("%v", contentType.Version)).
 		BodyJSON(contentType).
 		Receive(created, contentfulError)
+
+	fmt.Println("created:", created)
+	fmt.Println("err", err)
+	fmt.Println("contentFulError", contentfulError)
 
 	return created, handleError(err, contentfulError)
 }

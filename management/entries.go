@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+type Linkable interface {
+	Link() map[string]map[string]interface{}
+}
+
 type EntryFields map[string]map[string]interface{}
 
 type NewEntry struct {
@@ -42,6 +46,17 @@ func (c *Entry) Validate() error {
 	}
 
 	return nil
+}
+
+// Link represents a link to the Entry and implements the Linkable interface
+func (c *Entry) Link() map[string]map[string]interface{} {
+	return map[string]map[string]interface{}{
+		"sys": map[string]interface{}{
+			"id":       c.ID,
+			"linkType": "Entry",
+			"type":     LinkType,
+		},
+	}
 }
 
 // QueryEntries returns all entries for the given space and parameters.
@@ -193,6 +208,7 @@ func (c *Client) PublishEntry(entry *Entry) (published *Entry, err error) {
 	published = new(Entry)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/entries/%v/published", entry.Space.ID, entry.System.ID)
+	fmt.Println("path:", path)
 	_, err = c.sling.New().
 		Put(path).
 		Set("X-Contentful-Version", fmt.Sprintf("%v", entry.System.Version)).

@@ -22,6 +22,17 @@ func (s *Space) Validate() error {
 	return nil
 }
 
+// Link returns a link to the space
+func (s *Space) Link() *Link {
+	return &Link{
+		LinkData: &LinkData{
+			Type:     LinkType,
+			LinkType: "Space",
+			ID:       s.ID,
+		},
+	}
+}
+
 // FetchAllSpaces returns all spaces associated with the account
 func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err error) {
 	c.rl.Wait()

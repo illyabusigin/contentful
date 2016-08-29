@@ -13,22 +13,22 @@ import (
 // under the default locale.
 type Asset struct {
 	System `json:"sys"`
-	Fields AssetFields `json:"fields"`
+	Fields AssetFields `json:"fields,omitempty"`
 }
 
 // AssetFields contains all asset information.
 type AssetFields struct {
-	Title  map[string]string    `json:"title"`
-	File   map[string]AssetData `json:"file"`
+	Title  map[string]string    `json:"title,omitempty"`
+	File   map[string]AssetData `json:"file,omitempty"`
 	Detail *AssetDetail         `json:"details,omitempty"`
 }
 
 // AssetData contains all asset information
 type AssetData struct {
-	MIMEType string  `json:"contentType"`
-	Name     string  `json:"fileName"`
-	URL      *string `json:"url,omitempty"`
-	Upload   *string `json:"upload,omitempty"`
+	MIMEType string `json:"contentType"`
+	Name     string `json:"fileName"`
+	URL      string `json:"url,omitempty"`
+	Upload   string `json:"upload,omitempty"`
 }
 
 // Validate will validate the Asset to ensure all necessary fields are present.
@@ -43,6 +43,17 @@ func (a *Asset) Validate() error {
 	}
 
 	return nil
+}
+
+// Link represents a link to the Entry and implements the Linkable interface
+func (a *Asset) Link() map[string]map[string]interface{} {
+	return map[string]map[string]interface{}{
+		"sys": map[string]interface{}{
+			"id":       a.ID,
+			"linkType": "Asset",
+			"type":     LinkType,
+		},
+	}
 }
 
 type ImageDetail struct {
@@ -69,9 +80,9 @@ type FileFields struct {
 
 // FileData contains all file information
 type FileData struct {
-	MIMEType string  `json:"contentType"`
-	Name     string  `json:"fileName"`
-	URL      *string `json:"upload"`
+	MIMEType string `json:"contentType"`
+	Name     string `json:"fileName,omitempty"`
+	URL      string `json:"upload,omitempty"`
 }
 
 func (f *File) Validate() error {
@@ -92,7 +103,7 @@ func (f *File) Validate() error {
 			return fmt.Errorf("Filed validation failed. FileData.Name cannot be empty. FileData: %v", data)
 		} else if data.MIMEType == "" {
 			return fmt.Errorf("Filed validation failed. FileData.MIMEType cannot be empty. FileData: %v", data)
-		} else if *data.URL == "" || data.URL == nil {
+		} else if data.URL == "" {
 			return fmt.Errorf("Filed validation failed. FileData.URL cannot be empty. FileData: %v", data)
 		}
 	}
