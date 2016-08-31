@@ -168,6 +168,7 @@ func (c *Client) UpdateEntry(entry *Entry) (updated *Entry, err error) {
 
 	c.rl.Wait()
 
+	updated = new(Entry)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/entries/%v", entry.Space.ID, entry.System.ID)
 	_, err = c.sling.New().
@@ -209,7 +210,6 @@ func (c *Client) PublishEntry(entry *Entry) (published *Entry, err error) {
 	published = new(Entry)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/entries/%v/published", entry.Space.ID, entry.System.ID)
-	fmt.Println("path:", path)
 	_, err = c.sling.New().
 		Put(path).
 		Set("X-Contentful-Version", fmt.Sprintf("%v", entry.System.Version)).
