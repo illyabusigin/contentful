@@ -11,7 +11,7 @@ type Locale struct {
 
 	Name     string `json:"name,omitempty"`
 	Code     string `json:"code,omitempty"`
-	Default  bool   `json:"default"`
+	Default  bool   `json:"default,omitempty"`
 	Optional bool   `json:"optional"`
 	Fallback string `json:"fallbackCode,omitempty"`
 }
@@ -62,6 +62,9 @@ func (c *Client) CreateLocale(spaceID string, locale *Locale) (created *Locale, 
 
 	c.rl.Wait()
 
+	// Default cannot be set via the API, set to false so it will not appear in the request body
+	locale.Default = false
+
 	created = new(Locale)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/locales", spaceID)
@@ -87,6 +90,9 @@ func (c *Client) UpdateLocale(locale *Locale) (updated *Locale, err error) {
 	if locale == nil {
 		return nil, fmt.Errorf("Unable to locale. Locale argument was nil!")
 	}
+
+	// Default cannot be set via the API, set to false so it will not appear in the request body
+	locale.Default = false
 
 	if err = locale.Validate(); err != nil {
 		return
