@@ -116,6 +116,7 @@ func (c *Client) FetchEntry(spaceID string, entryID string) (entry *Entry, err e
 
 	c.rl.Wait()
 
+	entry = new(Entry)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/entries/%v", spaceID, entryID)
 	_, err = c.sling.New().Get(path).Receive(entry, contentfulError)
