@@ -7,10 +7,10 @@ import (
 // Locale allow the definition of translated content for both assets and
 // entries. A locale consists mainly of a name and a locale code.
 type Locale struct {
-	System `json:"sys"`
+	System `json:"sys,omitempty"`
 
-	Name     string `json:"name"`
-	Code     string `json:"code"`
+	Name     string `json:"name,omitempty"`
+	Code     string `json:"code,omitempty"`
 	Default  bool   `json:"default"`
 	Optional bool   `json:"optional"`
 	Fallback string `json:"fallbackCode,omitempty"`
@@ -25,10 +25,6 @@ func (l *Locale) Validate() error {
 
 	if len(l.Code) == 0 {
 		return fmt.Errorf("Locale code cannot be empty")
-	}
-
-	if l.Space == nil || l.Space.ID == "" {
-		return fmt.Errorf("Locale must specify valid System.Space.ID")
 	}
 
 	return nil
@@ -56,7 +52,7 @@ func (c *Client) FetchAllLocales(spaceID string) (locales []*Locale, pagination 
 
 // CreateLocale will create a locale with the provided information. It's important
 // to note that you cannot create two lcoales with the same locale code.
-func (c *Client) CreateLocale(locale *Locale) (created *Locale, err error) {
+func (c *Client) CreateLocale(spaceID string, locale *Locale) (created *Locale, err error) {
 	if locale == nil {
 		return nil, fmt.Errorf("CreateLocale failed, locale cannot be nil!")
 	}
@@ -68,7 +64,7 @@ func (c *Client) CreateLocale(locale *Locale) (created *Locale, err error) {
 
 	created = new(Locale)
 	contentfulError := new(ContentfulError)
-	path := fmt.Sprintf("spaces/%v/locales", locale.Space.ID)
+	path := fmt.Sprintf("spaces/%v/locales", spaceID)
 	_, err = c.sling.New().Post(path).BodyJSON(locale).Receive(created, contentfulError)
 
 	return created, handleError(err, contentfulError)

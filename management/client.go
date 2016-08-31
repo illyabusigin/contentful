@@ -66,7 +66,7 @@ func handleError(reqErr error, err *ContentfulError) error {
 // Note that none of the sys fields are editable and only the sys.id field can
 // be specified in the creation of an item (as long as it is not a Space).
 type System struct {
-	ID        string     `json:"id"`
+	ID        string     `json:"id,omitempty"`
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 
