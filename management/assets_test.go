@@ -42,7 +42,7 @@ var (
 			File: map[string]FileData{"en-US": FileData{
 				Name:     "cats.png",
 				MIMEType: "image/png",
-				URL:      &goodURL,
+				URL:      goodURL,
 			}},
 		},
 	}
@@ -65,7 +65,7 @@ var (
 		Fields: AssetFields{
 			File: map[string]AssetData{"en-US": {
 				Name:     "med106330_1210_bacon_pancakes_horiz.jpg",
-				URL:      &goodURL,
+				URL:      goodURL,
 				MIMEType: "image/png",
 			}},
 			Title: map[string]string{"en-US": "Bacon Pancakes"},
@@ -86,7 +86,7 @@ func TestFileValidationFailures(t *testing.T) {
 		{File{SpaceID: "test_ID", Fields: FileFields{File: map[string]FileData{"en-US": FileData{Name: ""}}}}, "File without title fields should return error"},
 		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}, File: map[string]FileData{"en-US": FileData{Name: ""}}}}, "File with empty file name should return error"},
 		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}, File: map[string]FileData{"en-US": FileData{Name: "TBD", MIMEType: ""}}}}, "File with empty MIMEType should return error"},
-		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}, File: map[string]FileData{"en-US": FileData{Name: "TBD", MIMEType: "image/png", URL: &emptyURL}}}}, "File with empty URL should return error"},
+		{File{SpaceID: "test_ID", Fields: FileFields{Title: map[string]string{"en-US": "Cat pictures"}, File: map[string]FileData{"en-US": FileData{Name: "TBD", MIMEType: "image/png", URL: emptyURL}}}}, "File with empty URL should return error"},
 	}
 
 	for _, test := range validationTests {

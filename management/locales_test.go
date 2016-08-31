@@ -101,7 +101,7 @@ func TestCreateLocaleRequest(t *testing.T) {
 		},
 	}
 
-	_, err := client.CreateLocale(&newLocale)
+	_, err := client.CreateLocale("space123", &newLocale)
 	req := doer.request
 
 	assert.Equal(t, err, errIntercept)
@@ -130,11 +130,11 @@ func TestCreateLocaleRequest(t *testing.T) {
 	assert.JSONEq(t, expectedJSON, string(requestJSON))
 
 	// nil locale
-	_, err = client.CreateLocale(nil)
+	_, err = client.CreateLocale("space123", nil)
 	assert.NotNil(t, err)
 
 	// invalid locale
-	_, err = client.CreateLocale(&Locale{})
+	_, err = client.CreateLocale("space123", &Locale{})
 	assert.NotNil(t, err)
 }
 

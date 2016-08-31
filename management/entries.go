@@ -81,6 +81,7 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 	}
 
 	results := new(entriesResponse)
+	results.Items = []*Entry{}
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/entries", spaceID)
 	req, err := c.sling.New().
