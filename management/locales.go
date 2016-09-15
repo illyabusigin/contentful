@@ -14,6 +14,9 @@ type Locale struct {
 	Default  bool   `json:"default,omitempty"`
 	Optional bool   `json:"optional"`
 	Fallback string `json:"fallbackCode,omitempty"`
+
+	EnabledForContentManagement bool `json:"contentManagementApi"`
+	EnabledForContentDelivery   bool `json:"contentDeliveryApi"`
 }
 
 // Validate will validate the locale. An error is returned if the content type
