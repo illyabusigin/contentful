@@ -8,7 +8,7 @@ type Linkable interface {
 	Link() map[string]map[string]interface{}
 }
 
-type EntryFields map[string]map[string]interface{}
+type EntryFields map[string]interface{}
 
 type NewEntry struct {
 	Fields EntryFields `json:"fields"`
