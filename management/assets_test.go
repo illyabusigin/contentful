@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/illyabusigin/contentful/models"
 	assert "github.com/stretchr/testify/require"
 )
 

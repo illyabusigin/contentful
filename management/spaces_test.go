@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/illyabusigin/contentful/models"
 	assert "github.com/stretchr/testify/require"
 )
 

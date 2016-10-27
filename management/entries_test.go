@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/illyabusigin/contentful/models"
 	assert "github.com/stretchr/testify/require"
 )
 
@@ -144,7 +145,7 @@ func TestCreateEntryRequest(t *testing.T) {
 	client.sling = client.sling.New().Doer(doer)
 
 	newEntry := &NewEntry{
-		Fields: map[string]map[string]interface{}{
+		Fields: EntryFields{
 			"title": map[string]interface{}{
 				"en-US": "Cat-pictures",
 			},
@@ -223,7 +224,7 @@ func TestUpdateEntryRequest(t *testing.T) {
 	client.sling = client.sling.New().Doer(doer)
 
 	newEntry := &Entry{
-		Fields: map[string]map[string]interface{}{
+		Fields: EntryFields{
 			"title": map[string]interface{}{
 				"en-US": "Cat-pictures",
 			},
