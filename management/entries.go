@@ -7,13 +7,25 @@ import (
 )
 
 // QueryEntries returns all entries for the given space and parameters.
-func (c *Client) QueryEntries(spaceID string, params map[string]string, limit int, offset int) (entries []*Entry, pagination *Pagination, err error) {
+func (c *Client) QueryEntries(spaceID string, params map[string]string, limit int, offset int) (result *QueryEntriesResult) {
+	result = &QueryEntriesResult{
+		Entries: []*Entry{},
+		Includes: &Includes{
+			Entries: []*Entry{},
+			Assets:  []*Asset{},
+		},
+
+		Errors: []error{},
+	}
+
 	if spaceID == "" {
-		return nil, nil, fmt.Errorf("FetchEntries failed. Space identifier is not valid!")
+		result.Errors = append(result.Errors, fmt.Errorf("QueryEntries failed. Space identifier is not valid!"))
+		return
 	}
 
 	if limit < 0 {
-		return nil, nil, fmt.Errorf("FetchEntries failed. Limit must be greater than 0")
+		result.Errors = append(result.Errors, fmt.Errorf("QueryEntries failed. Limit must be greater than 0"))
+		return
 	}
 
 	if limit > 100 {
@@ -24,11 +36,17 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 
 	type entriesResponse struct {
 		*Pagination
-		Items []*Entry `json:"items"`
+		Items    []*Entry  `json:"items"`
+		Includes *Includes `json:"includes"`
 	}
 
-	results := new(entriesResponse)
-	results.Items = []*Entry{}
+	response := new(entriesResponse)
+	response.Items = []*Entry{}
+	response.Includes = &Includes{
+		Entries: []*Entry{},
+		Assets:  []*Asset{},
+	}
+
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/entries", spaceID)
 	req, err := c.sling.New().
@@ -50,9 +68,16 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 	req.URL.RawQuery = q.Encode()
 
 	// Perform request
-	_, err = c.sling.Do(req, results, contentfulError)
+	_, err = c.sling.Do(req, response, contentfulError)
 
-	return results.Items, results.Pagination, handleError(err, contentfulError)
+	result.Pagination = response.Pagination
+	result.Includes = response.Includes
+
+	if handledErr := handleError(err, contentfulError); handledErr != nil {
+		result.Errors = append(result.Errors, handledErr)
+	}
+
+	return
 }
 
 // FetchEntry returns a single entry for the given space and entry identifier

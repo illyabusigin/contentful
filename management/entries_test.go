@@ -79,7 +79,9 @@ func TestQueryEntriesRequest(t *testing.T) {
 	params := map[string]string{
 		"include": "all",
 	}
-	_, _, err := client.QueryEntries("space123", params, 100, 0)
+
+	result := client.QueryEntries("space123", params, 100, 0)
+	err := result.Errors[0]
 	req := doer.request
 
 	assert.Equal(t, err, errIntercept)
@@ -88,15 +90,18 @@ func TestQueryEntriesRequest(t *testing.T) {
 	assert.Equal(t, req.Method, http.MethodGet)
 
 	// Invalid spaceID
-	_, _, err = client.QueryEntries("", nil, 100, 0)
+	result = client.QueryEntries("", nil, 100, 0)
+	err = result.Errors[0]
 	assert.NotNil(t, err)
 
 	// Invalid limit
-	_, _, err = client.QueryEntries("space123", nil, -100, 0)
+	result = client.QueryEntries("space123", nil, -100, 0)
+	err = result.Errors[0]
 	assert.NotNil(t, err)
 
 	// Restricting limit to 100
-	_, _, err = client.QueryEntries("space123", params, 500, 0)
+	result = client.QueryEntries("space123", params, 500, 0)
+	err = result.Errors[0]
 	req = doer.request
 
 	assert.Equal(t, err, errIntercept)

@@ -23,6 +23,21 @@ func (c *NewEntry) Validate() error {
 	return nil
 }
 
+// Includes are a sub-type used by EntryResults
+type Includes struct {
+	Entries []*Entry
+	Assets  []*Asset
+}
+
+// QueryEntriesResult are returned for QueryEntries
+type QueryEntriesResult struct {
+	Entries  []*Entry
+	Includes *Includes
+
+	Pagination *Pagination
+	Errors     []error
+}
+
 // Entry represent textual content in a space. An entry's data adheres to a
 // certain content type.
 type Entry struct {
