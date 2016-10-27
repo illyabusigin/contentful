@@ -25,11 +25,18 @@ type Client struct {
 
 // NewClient creates a new Contentful API client
 func NewClient(accessToken string, version string, httpClient *http.Client) *Client {
+	type Params struct {
+		AccessToken string `url:"access_token,omitempty"`
+		Locale      string `url:"locale,omitempty"`
+	}
+
+	params := &Params{AccessToken: accessToken, Locale: "*"}
+
 	client := &Client{
 		AccessToken: accessToken,
 		sling: sling.New().Client(httpClient).Base(baseURL).
 			Set("Content-Type", contentTypeHeader(version)).
-			Set("Authorization", authorizationHeader(accessToken)),
+			QueryStruct(params),
 	}
 
 	client.rl = rate.New(10, time.Second*1)
