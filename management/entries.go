@@ -72,6 +72,7 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 
 	result.Pagination = response.Pagination
 	result.Includes = response.Includes
+	result.Entries = response.Items
 
 	if handledErr := handleError(err, contentfulError); handledErr != nil {
 		result.Errors = append(result.Errors, handledErr)
