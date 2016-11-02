@@ -339,7 +339,7 @@ func TestFetchAssetsSuccessRequest(t *testing.T) {
 	spaceID := "space1234"
 
 	// All assets
-	_, _, err := client.FetchAssets(spaceID, false, 100, 0)
+	_, _, err := client.QueryAssets(spaceID, false, map[string]string{}, 100, 0)
 	req := doer.request
 
 	assert.Equal(t, err, errIntercept)
@@ -349,7 +349,7 @@ func TestFetchAssetsSuccessRequest(t *testing.T) {
 
 	// Public assets
 	doer.err = errIntercept
-	_, _, err = client.FetchAssets(spaceID, true, 100, 0)
+	_, _, err = client.QueryAssets(spaceID, true, map[string]string{}, 100, 0)
 	req = doer.request
 
 	assert.Equal(t, err, errIntercept)
@@ -358,17 +358,17 @@ func TestFetchAssetsSuccessRequest(t *testing.T) {
 	assert.Equal(t, req.Method, http.MethodGet)
 
 	// Invalid space ID
-	_, _, err = client.FetchAssets("", false, 100, 0)
+	_, _, err = client.QueryAssets("", false, map[string]string{}, 100, 0)
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "FetchAssets failed. Space identifier is not valid!")
 
 	// Invalid limit
-	_, _, err = client.FetchAssets(spaceID, false, -100, 0)
+	_, _, err = client.QueryAssets(spaceID, false, map[string]string{}, -100, 0)
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "FetchAssets failed. Limit must be greater than 0")
 
 	//Passing bogus limit, resetting to 100
-	_, _, err = client.FetchAssets(spaceID, false, 1000, 0)
+	_, _, err = client.QueryAssets(spaceID, false, map[string]string{}, 1000, 0)
 	req = doer.request
 
 	assert.Equal(t, err, errIntercept)

@@ -21,9 +21,8 @@ func (c *Client) FetchAsset(spaceID string, assetID string) (asset *Asset, err e
 	return asset, handleError(err, contentfulError)
 }
 
-// FetchAssets will return all assets associated with a space. You can toggle
-// the published flag to only fetch published assets.
-func (c *Client) FetchAssets(spaceID string, limit int, offset int) (assets []*Asset, pagination *Pagination, err error) {
+// QueryAssets will return all assets associated with a space
+func (c *Client) QueryAssets(spaceID string, params map[string]string, limit int, offset int) (assets []*Asset, pagination *Pagination, err error) {
 	if spaceID == "" {
 		return nil, nil, fmt.Errorf("FetchAssets failed. Space identifier is not valid!")
 	}
@@ -48,7 +47,8 @@ func (c *Client) FetchAssets(spaceID string, limit int, offset int) (assets []*A
 	path := fmt.Sprintf("spaces/%v/assets", spaceID)
 
 	req, err := c.sling.New().
-		Get(path).Request()
+		Get(path).
+		Request()
 
 	if err != nil {
 		return
@@ -56,6 +56,10 @@ func (c *Client) FetchAssets(spaceID string, limit int, offset int) (assets []*A
 
 	// Add query parameters
 	q := req.URL.Query()
+	for k, v := range params {
+		q.Set(k, v)
+	}
+
 	q.Set("skip", fmt.Sprintf("%v", offset))
 	q.Set("limit", fmt.Sprintf("%v", limit))
 	req.URL.RawQuery = q.Encode()
