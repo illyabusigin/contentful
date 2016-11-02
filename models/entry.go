@@ -25,8 +25,8 @@ func (c *NewEntry) Validate() error {
 
 // Includes are a sub-type used by EntryResults
 type Includes struct {
-	Entries []*Entry
-	Assets  []*Asset
+	Entries []*Entry `json:"Entry"`
+	Assets  []*Asset `json:"Asset"`
 }
 
 // QueryEntriesResult are returned for QueryEntries
