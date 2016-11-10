@@ -5,5 +5,5 @@ type APIKey struct {
 	System `json:"sys"`
 
 	Name        string `json:"name"`
-	AccessToken string `json:"accesstoken"`
+	AccessToken string `json:"accessToken"`
 }

@@ -22,16 +22,22 @@ func (c *Client) CreateContentDeliveryAPIKey(spaceID string, name string) (key *
 	c.rl.Wait()
 
 	type apikey struct {
-		name string
+		Name string `json:"name"`
 	}
 
 	key = new(APIKey)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/api_keys", spaceID)
-	_, err = c.sling.New().
+	req, err := c.sling.New().
 		Post(path).
-		BodyJSON(&apikey{name: name}).
-		Receive(key, contentfulError)
+		BodyJSON(&apikey{Name: name}).
+		Request()
+
+	if err != nil {
+		return
+	}
+
+	_, err = c.sling.Do(req, key, contentfulError)
 
 	return key, handleError(err, contentfulError)
 }
