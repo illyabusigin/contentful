@@ -13,10 +13,16 @@ func (c *Client) FetchAsset(spaceID string, assetID string) (asset *Asset, err e
 	asset = new(Asset)
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/assets/%v", spaceID, assetID)
-	_, err = c.sling.New().
-		Get(path).
-		BodyJSON(asset).
-		Receive(asset, contentfulError)
+	req, err := c.sling.New().
+		Get(path).Request()
+
+	// Add query parameters
+	q := req.URL.Query()
+	q.Set("locale", "*")
+
+	req.URL.RawQuery = q.Encode()
+
+	_, err = c.sling.Do(req, asset, contentfulError)
 
 	return asset, handleError(err, contentfulError)
 }
@@ -60,6 +66,7 @@ func (c *Client) QueryAssets(spaceID string, params map[string]string, limit int
 		q.Set(k, v)
 	}
 
+	q.Set("locale", "*")
 	q.Set("skip", fmt.Sprintf("%v", offset))
 	q.Set("limit", fmt.Sprintf("%v", limit))
 	req.URL.RawQuery = q.Encode()
