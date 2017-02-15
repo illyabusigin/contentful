@@ -64,6 +64,23 @@ func handleError(reqErr error, err *ContentfulError) error {
 	return err
 }
 
+// ContentError is the error object for errors that get returned as party of entry queries
+type ContentError struct {
+	Details struct {
+		ID       string `json:"id"`
+		Type     string `json:"type"`
+		LinkType string `json:"linkType"`
+	} `json:"details"`
+	Sys struct {
+		Type string `json:"type"`
+		ID   string `json:"id"`
+	} `json:"sys"`
+}
+
+func (e *ContentError) Error() string {
+	return fmt.Sprintf("Error: %v", e.Sys.ID)
+}
+
 // ContentfulError represnts the error object that is returned when something
 // goes wrong with a Contentful API request. This struct conforms to the `error`
 // interface.

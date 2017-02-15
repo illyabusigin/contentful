@@ -36,8 +36,9 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 
 	type entriesResponse struct {
 		*Pagination
-		Items    []*Entry  `json:"items"`
-		Includes *Includes `json:"includes"`
+		Items    []*Entry        `json:"items"`
+		Includes *Includes       `json:"includes"`
+		Errors   []*ContentError `json:"errors"`
 	}
 
 	response := new(entriesResponse)
@@ -46,6 +47,7 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 		Entries: []*Entry{},
 		Assets:  []*Asset{},
 	}
+	response.Errors = []*ContentError{}
 
 	contentfulError := new(ContentfulError)
 	path := fmt.Sprintf("spaces/%v/entries", spaceID)
@@ -74,6 +76,13 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 	result.Includes = response.Includes
 	result.Entries = response.Items
 
+	coercedErrors := []error{}
+	fmt.Println("found errors in contentful layer:", len(response.Errors))
+	for _, err := range response.Errors {
+		coercedErrors = append(coercedErrors, err)
+	}
+
+	result.Errors = coercedErrors
 	if handledErr := handleError(err, contentfulError); handledErr != nil {
 		result.Errors = append(result.Errors, handledErr)
 	}
