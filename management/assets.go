@@ -22,7 +22,7 @@ func (c *Client) CreateAsset(file *File) (created *Asset, err error) {
 	created = &Asset{}
 
 	created = new(Asset)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets", file.SpaceID)
 	_, err = c.sling.New().
 		Post(path).
@@ -46,7 +46,7 @@ func (c *Client) UpdateAsset(asset *Asset) (updated *Asset, err error) {
 	c.rl.Wait()
 
 	updated = new(Asset)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v", asset.System.Space.ID, asset.System.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -62,7 +62,7 @@ func (c *Client) FetchAsset(spaceID string, assetID string) (asset *Asset, err e
 	c.rl.Wait()
 
 	asset = new(Asset)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v", spaceID, assetID)
 	_, err = c.sling.New().
 		Get(path).
@@ -95,7 +95,7 @@ func (c *Client) QueryAssets(spaceID string, published bool, params map[string]s
 	}
 
 	results := new(assetsResponse)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := func() string {
 		if published {
 			return fmt.Sprintf("spaces/%v/public/assets", spaceID)
@@ -141,7 +141,7 @@ func (c *Client) ProcessAsset(asset *Asset, localeCode string) (err error) {
 
 	c.rl.Wait()
 
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v/files/%v/process", asset.Space.ID, asset.ID, localeCode)
 	_, err = c.sling.New().
 		Put(path).
@@ -159,7 +159,7 @@ func (c *Client) PublishAsset(asset *Asset) (published *Asset, err error) {
 	c.rl.Wait()
 
 	published = new(Asset)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v/published", asset.Space.ID, asset.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -178,7 +178,7 @@ func (c *Client) UnpublishAsset(asset *Asset) (unpublished *Asset, err error) {
 	c.rl.Wait()
 
 	unpublished = new(Asset)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v/published", asset.Space.ID, asset.ID)
 	_, err = c.sling.New().
 		Delete(path).
@@ -195,7 +195,7 @@ func (c *Client) DeleteAsset(asset *Asset) (err error) {
 
 	c.rl.Wait()
 
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v", asset.Space.ID, asset.ID)
 	_, err = c.sling.New().
 		Delete(path).
@@ -219,7 +219,7 @@ func (c *Client) ArchiveAsset(asset *Asset) (archived *Asset, err error) {
 	c.rl.Wait()
 
 	archived = new(Asset)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v/archived", asset.Space.ID, asset.System.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -242,7 +242,7 @@ func (c *Client) UnarchiveAsset(asset *Asset) (unarchived *Asset, err error) {
 	c.rl.Wait()
 
 	unarchived = new(Asset)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/assets/%v/archived", asset.Space.ID, asset.System.ID)
 	_, err = c.sling.New().
 		Delete(path).

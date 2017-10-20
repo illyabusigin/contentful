@@ -47,7 +47,7 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 		Assets:  []*Asset{},
 	}
 
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries", spaceID)
 	req, err := c.sling.New().
 		Get(path).
@@ -91,7 +91,7 @@ func (c *Client) FetchEntry(spaceID string, entryID string) (entry *Entry, err e
 	c.rl.Wait()
 
 	entry = new(Entry)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries/%v", spaceID, entryID)
 	_, err = c.sling.New().Get(path).Receive(entry, contentfulError)
 
@@ -117,7 +117,7 @@ func (c *Client) CreateEntry(entry *NewEntry, contentType *ContentType) (created
 	c.rl.Wait()
 
 	created = new(Entry)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries", contentType.Space.ID)
 	_, err = c.sling.New().
 		Post(path).
@@ -143,7 +143,7 @@ func (c *Client) UpdateEntry(entry *Entry) (updated *Entry, err error) {
 	c.rl.Wait()
 
 	updated = new(Entry)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries/%v", entry.Space.ID, entry.System.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -159,7 +159,7 @@ func (c *Client) DeleteEntry(entryID string, spaceID string) (err error) {
 
 	c.rl.Wait()
 
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries/%v", spaceID, entryID)
 	_, err = c.sling.New().
 		Delete(path).
@@ -182,7 +182,7 @@ func (c *Client) PublishEntry(entry *Entry) (published *Entry, err error) {
 	c.rl.Wait()
 
 	published = new(Entry)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries/%v/published", entry.Space.ID, entry.System.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -206,7 +206,7 @@ func (c *Client) UnpublishEntry(entry *Entry) (unpublished *Entry, err error) {
 	c.rl.Wait()
 
 	unpublished = new(Entry)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries/%v/published", entry.Space.ID, entry.System.ID)
 	_, err = c.sling.New().
 		Delete(path).
@@ -230,7 +230,7 @@ func (c *Client) ArchiveEntry(entry *Entry) (archived *Entry, err error) {
 	c.rl.Wait()
 
 	archived = new(Entry)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries/%v/archived", entry.Space.ID, entry.System.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -253,7 +253,7 @@ func (c *Client) UnarchiveEntry(entry *Entry) (unarchived *Entry, err error) {
 	c.rl.Wait()
 
 	unarchived = new(Entry)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/entries/%v/archived", entry.Space.ID, entry.System.ID)
 	_, err = c.sling.New().
 		Delete(path).

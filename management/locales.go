@@ -19,7 +19,7 @@ func (c *Client) FetchAllLocales(spaceID string) (locales []*Locale, pagination 
 	}
 
 	results := new(localesResponse)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/locales", spaceID)
 	_, err = c.sling.New().Get(path).Receive(results, contentfulError)
 
@@ -42,7 +42,7 @@ func (c *Client) CreateLocale(spaceID string, locale *Locale) (created *Locale, 
 	locale.Default = false
 
 	created = new(Locale)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/locales", spaceID)
 	_, err = c.sling.New().Post(path).BodyJSON(locale).Receive(created, contentfulError)
 
@@ -54,7 +54,7 @@ func (c *Client) FetchLocale(spaceID string, localeID string) (locale *Locale, e
 	c.rl.Wait()
 
 	locale = new(Locale)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/locales/%v", spaceID, localeID)
 	_, err = c.sling.New().Get(path).Receive(locale, contentfulError)
 
@@ -77,7 +77,7 @@ func (c *Client) UpdateLocale(locale *Locale) (updated *Locale, err error) {
 	c.rl.Wait()
 
 	updated = new(Locale)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/locales/%v", locale.Space.ID, locale.System.ID)
 	_, err = c.sling.New().
 		Set("X-Contentful-Version", fmt.Sprintf("%v", locale.System.Version)).
@@ -95,7 +95,7 @@ func (c *Client) UpdateLocale(locale *Locale) (updated *Locale, err error) {
 func (c *Client) DeleteLocale(spaceID string, localeID string) (err error) {
 	c.rl.Wait()
 
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/locales/%v", spaceID, localeID)
 	_, err = c.sling.New().Delete(path).Receive(nil, contentfulError)
 

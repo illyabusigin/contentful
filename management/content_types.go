@@ -29,7 +29,7 @@ func (c *Client) FetchContentTypes(spaceID string, published bool, limit int, of
 	}
 
 	results := new(contentTypesResponse)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := func() string {
 		if published {
 			return fmt.Sprintf("spaces/%v/public/content_types", spaceID)
@@ -72,7 +72,7 @@ func (c *Client) CreateContentType(contentType *ContentType) (created *ContentTy
 	c.rl.Wait()
 
 	created = new(ContentType)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/content_types/%v", contentType.Space.ID, contentType.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -98,7 +98,7 @@ func (c *Client) FetchContentType(spaceID string, contentTypeID string) (content
 	c.rl.Wait()
 
 	contentType = new(ContentType)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/content_types/%v", spaceID, contentTypeID)
 	_, err = c.sling.New().Get(path).Receive(contentType, contentfulError)
 
@@ -115,7 +115,7 @@ func (c *Client) UpdateContentType(contentType *ContentType) (updated *ContentTy
 func (c *Client) DeleteContentType(spaceID string, contentTypeID string) (err error) {
 	c.rl.Wait()
 
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/content_types/%v", spaceID, contentTypeID)
 	_, err = c.sling.New().
 		Delete(path).
@@ -137,7 +137,7 @@ func (c *Client) ActivateContentType(contentType *ContentType) (activated *Conte
 	c.rl.Wait()
 
 	activated = new(ContentType)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/content_types/%v/published", contentType.Space.ID, contentType.ID)
 	_, err = c.sling.New().
 		Put(path).
@@ -160,7 +160,7 @@ func (c *Client) DeactivateContentType(contentType *ContentType) (deactivated *C
 	c.rl.Wait()
 
 	deactivated = new(ContentType)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/content_types/%v/published", contentType.Space.ID, contentType.ID)
 	_, err = c.sling.New().
 		Delete(path).

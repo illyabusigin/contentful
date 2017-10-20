@@ -26,7 +26,7 @@ func (c *Client) CreateContentDeliveryAPIKey(spaceID string, name string) (key *
 	}
 
 	key = new(APIKey)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/api_keys", spaceID)
 	req, err := c.sling.New().
 		Post(path).
@@ -65,7 +65,7 @@ func (c *Client) FetchContentDeliveryAPIKeys(spaceID string, limit int, offset i
 
 	results := new(keysResponse)
 	results.Items = []*APIKey{}
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v/api_keys", spaceID)
 	req, err := c.sling.New().
 		Get(path).

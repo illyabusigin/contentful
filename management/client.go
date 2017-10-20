@@ -7,6 +7,8 @@ import (
 
 	rate "github.com/beefsack/go-rate"
 	"github.com/ingaged/sling"
+
+	"github.com/illyabusigin/contentful/models"
 )
 
 const baseURL = "https://api.contentful.com"
@@ -45,7 +47,7 @@ func authorizationHeader(accessToken string) string {
 	return fmt.Sprintf("Bearer %v", accessToken)
 }
 
-func handleError(reqErr error, err *ContentfulError) error {
+func handleError(reqErr error, err *models.Error) error {
 	if reqErr != nil {
 		return reqErr
 	}
@@ -55,22 +57,6 @@ func handleError(reqErr error, err *ContentfulError) error {
 	}
 
 	return err
-}
-
-// ContentfulError represnts the error object that is returned when something
-// goes wrong with a Contentful API request. This struct conforms to the `error`
-// interface.
-type ContentfulError struct {
-	RequestID string `json:"requestId"`
-	Message   string `json:"message"`
-	Sys       struct {
-		Type string `json:"type"`
-		ID   string `json:"id"`
-	} `json:"sys"`
-}
-
-func (e *ContentfulError) Error() string {
-	return fmt.Sprintf("%v, %v, %v", e.Message, e.RequestID, e.Sys)
 }
 
 // Doer executes http requests.  It is implemented by *http.Client.  You can

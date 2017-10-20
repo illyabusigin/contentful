@@ -19,7 +19,7 @@ func (c *Client) FetchAllSpaces() (spaces []*Space, pagination *Pagination, err 
 	}
 
 	results := new(spacesResponse)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces")
 	_, err = c.sling.New().Get(path).Receive(results, contentfulError)
 
@@ -40,7 +40,7 @@ func (c *Client) CreateSpace(space *Space) (created *Space, err error) {
 	c.rl.Wait()
 
 	created = new(Space)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces")
 	_, err = c.sling.New().Post(path).BodyJSON(space).Receive(created, contentfulError)
 
@@ -52,7 +52,7 @@ func (c *Client) FetchSpace(identifier string) (space *Space, err error) {
 	c.rl.Wait()
 
 	space = new(Space)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v", identifier)
 	_, err = c.sling.New().Get(path).Receive(space, contentfulError)
 
@@ -68,7 +68,7 @@ func (c *Client) UpdateSpace(space *Space) (updated *Space, err error) {
 	c.rl.Wait()
 
 	updated = new(Space)
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v", space.System.ID)
 	_, err = c.sling.New().
 		Set("X-Contentful-Version", fmt.Sprintf("%v", space.System.Version)).
@@ -85,7 +85,7 @@ func (c *Client) UpdateSpace(space *Space) (updated *Space, err error) {
 func (c *Client) DeleteSpace(identifier string) (err error) {
 	c.rl.Wait()
 
-	contentfulError := new(ContentfulError)
+	contentfulError := new(Error)
 	path := fmt.Sprintf("spaces/%v", identifier)
 	_, err = c.sling.New().Delete(path).Receive(nil, contentfulError)
 
