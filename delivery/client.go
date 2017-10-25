@@ -11,6 +11,9 @@ import (
 
 const baseURL = "https://cdn.contentful.com"
 
+// PaginationSizeLimit is the sizel limit for pages
+var PaginationSizeLimit = 1000
+
 // A Client manages communication with the Contentful Management API.
 type Client struct {
 	AccessToken string

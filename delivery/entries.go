@@ -28,8 +28,8 @@ func (c *Client) QueryEntries(spaceID string, params map[string]string, limit in
 		return
 	}
 
-	if limit > 100 {
-		limit = 100
+	if limit > PaginationSizeLimit {
+		limit = PaginationSizeLimit
 	}
 
 	c.rl.Wait()

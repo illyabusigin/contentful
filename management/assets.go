@@ -83,8 +83,8 @@ func (c *Client) QueryAssets(spaceID string, published bool, params map[string]s
 		return nil, nil, fmt.Errorf("FetchAssets failed. Limit must be greater than 0")
 	}
 
-	if limit > 100 {
-		limit = 100
+	if limit > PaginationSizeLimit {
+		limit = PaginationSizeLimit
 	}
 
 	c.rl.Wait()
