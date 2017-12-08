@@ -24,11 +24,11 @@ type AssetFields struct {
 
 // AssetData contains all asset information
 type AssetData struct {
-	MIMEType string      `json:"contentType"`
-	Name     string      `json:"fileName"`
-	URL      string      `json:"url,omitempty"`
-	Upload   string      `json:"upload,omitempty"`
-	Detail   AssetDetail `json:"details,omitempty"`
+	MIMEType string       `json:"contentType"`
+	Name     string       `json:"fileName"`
+	URL      string       `json:"url,omitempty"`
+	Upload   string       `json:"upload,omitempty"`
+	Detail   *AssetDetail `json:"details,omitempty"`
 }
 
 // Validate will validate the Asset to ensure all necessary fields are present.
@@ -62,8 +62,8 @@ type ImageDetail struct {
 }
 
 type AssetDetail struct {
-	Image ImageDetail `json:"image,omitempty"`
-	Size  int         `json:"size"`
+	Image *ImageDetail `json:"image,omitempty"`
+	Size  int          `json:"size"`
 }
 
 // File represents all asset data prior to upload
